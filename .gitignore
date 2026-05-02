@@ -1,0 +1,87 @@
+# Sensitive files - never commit secrets
+.env
+.env.*
+*.pem
+*.key
+*.cert
+*.p12
+*.pfx
+credentials.json
+secrets.json
+service-account*.json
+*.jks
+
+
+# Cloud provider configs
+.aws/
+.kube/config
+.kube/config.*
+.ssh/
+
+# API keys and tokens
+*.token
+api_keys.json
+secrets.yml
+secrets.yaml
+
+# IDE / Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.project
+.classpath
+.settings/
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+[nul]
+
+# Build artifacts
+node_modules/
+dist/
+build/
+__pycache__/
+*.pyc
+*.pyo
+target/
+*.o
+*.so
+*.dylib
+
+# Logs
+*.log
+logs/
+
+# Temp files
+*.tmp
+*.bak
+*.cache
+
+# Claude Code (local settings)
+.claude/
+docs/
+CLAUDE.md
+
+# Package manager lock files (optional - uncomment if needed)
+# package-lock.json
+# yarn.lock
+# pnpm-lock.yaml
+
+# Terraform (if used)
+.terraform/
+*.tfstate
+*.tfstate.backup
+*.tfvars
+!example.tfvars
+
+# Python virtual environments
+venv/
+.venv/
+env/
+
+# Docker volumes
+docker-data/
