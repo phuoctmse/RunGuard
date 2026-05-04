@@ -1,7 +1,9 @@
 """Audit record data model."""
 
+from datetime import UTC, datetime
+from typing import Any
+
 from pydantic import BaseModel, Field
-from datetime import datetime, timezone
 
 
 class AuditRecord(BaseModel):
@@ -9,6 +11,6 @@ class AuditRecord(BaseModel):
 
     incident_id: str
     event_type: str
-    details: dict = {}
-    timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    details: dict[str, Any] = {}
+    timestamp: datetime = Field(default_factory=lambda: datetime.now(UTC))
     id: str = ""

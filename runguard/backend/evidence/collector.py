@@ -1,6 +1,8 @@
 """Evidence aggregation with timeout support."""
 
 import asyncio
+from typing import Any
+
 from runguard.backend.evidence.kubernetes import KubernetesEvidenceCollector
 
 
@@ -12,7 +14,7 @@ class EvidenceCollector:
         self.timeout_seconds = timeout_seconds
         self.k8s_collector = KubernetesEvidenceCollector(namespace=namespace)
 
-    async def collect(self, workload: str) -> dict:
+    async def collect(self, workload: str) -> dict[str, Any]:
         """Collect all evidence within the timeout."""
         try:
             evidence = await asyncio.wait_for(
@@ -21,7 +23,7 @@ class EvidenceCollector:
             )
             evidence["timeout"] = False
             return evidence
-        except asyncio.TimeoutError:
+        except TimeoutError:
             return {
                 "pod_logs": {},
                 "events": [],

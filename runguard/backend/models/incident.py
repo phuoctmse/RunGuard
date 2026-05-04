@@ -1,11 +1,12 @@
 """Incident data model."""
 
-from enum import Enum
+from datetime import UTC, datetime
+from enum import StrEnum
+
 from pydantic import BaseModel, Field
-from datetime import datetime, timezone
 
 
-class IncidentStatus(str, Enum):
+class IncidentStatus(StrEnum):
     """Incident lifecycle status."""
 
     PENDING = "pending"
@@ -28,5 +29,5 @@ class Incident(BaseModel):
     workload: str
     raw_alert: str
     status: IncidentStatus = IncidentStatus.PENDING
-    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
-    updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(UTC))

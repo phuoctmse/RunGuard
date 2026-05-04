@@ -1,14 +1,16 @@
 """Incident API routes."""
 
 import uuid
+from datetime import UTC, datetime
+from typing import Any
+
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
-from datetime import datetime, timezone
 
 router = APIRouter(prefix="/incidents", tags=["incidents"])
 
 # In-memory store for MVP (replace with DynamoDB later)
-_incidents: dict = {}
+_incidents: dict[str, dict[str, Any]] = {}
 
 
 class IncidentCreateRequest(BaseModel):
@@ -21,7 +23,7 @@ class IncidentCreateRequest(BaseModel):
 
 
 @router.post("", status_code=201)
-async def create_incident(request: IncidentCreateRequest):
+async def create_incident(request: IncidentCreateRequest) -> dict[str, Any]:
     """Create a new incident from alert or manual input."""
     incident_id = f"inc-{uuid.uuid4().hex[:8]}"
     incident = {
@@ -33,15 +35,15 @@ async def create_incident(request: IncidentCreateRequest):
         "workload": request.workload,
         "raw_alert": request.raw_alert,
         "status": "pending",
-        "created_at": datetime.now(timezone.utc).isoformat(),
-        "updated_at": datetime.now(timezone.utc).isoformat(),
+        "created_at": datetime.now(UTC).isoformat(),
+        "updated_at": datetime.now(UTC).isoformat(),
     }
     _incidents[incident_id] = incident
     return incident
 
 
 @router.get("/{incident_id}")
-async def get_incident(incident_id: str):
+async def get_incident(incident_id: str) -> dict[str, Any]:
     """Get incident details by ID."""
     if incident_id not in _incidents:
         raise HTTPException(status_code=404, detail="Incident not found")

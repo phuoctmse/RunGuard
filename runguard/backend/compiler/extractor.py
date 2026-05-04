@@ -1,10 +1,12 @@
 """Extract structured metadata from parsed runbook sections."""
 
 import uuid
+from typing import Any
+
 from runguard.backend.models.runbook import Runbook
 
 
-def extract_metadata(sections: dict, raw_markdown: str = "") -> Runbook:
+def extract_metadata(sections: dict[str, Any], raw_markdown: str = "") -> Runbook:
     """Convert parsed sections into a Runbook model."""
     runbook_id = f"rb-{uuid.uuid4().hex[:8]}"
 

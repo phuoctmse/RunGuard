@@ -1,15 +1,16 @@
 """Markdown runbook parser — extracts sections from Markdown."""
 
 import re
+from typing import Any
 
 
-def parse_runbook_markdown(markdown: str) -> dict:
+def parse_runbook_markdown(markdown: str) -> dict[str, Any]:
     """Parse a Markdown runbook into sections.
 
     Returns a dict with keys: scope, allowed_tools, forbidden_tools,
     severity, rollback_steps, title.
     """
-    sections: dict = {}
+    sections: dict[str, Any] = {}
     current_section = None
     lines = markdown.strip().split("\n")
 
@@ -47,11 +48,15 @@ def parse_runbook_markdown(markdown: str) -> dict:
 
     # Convert severity from list to string if needed
     if isinstance(sections.get("severity"), list):
-        sections["severity"] = sections["severity"][0] if sections["severity"] else "medium"
+        severity_list = sections["severity"]
+        sections["severity"] = severity_list[0] if severity_list else "medium"
 
     # Parse scope into structured format
     if "scope" in sections and isinstance(sections["scope"], list):
-        scope: dict = {"namespaces": [], "workloads": []}
+        scope: dict[str, list[str]] = {
+            "namespaces": [],
+            "workloads": [],
+        }
         for item in sections["scope"]:
             if item.lower().startswith("namespaces:"):
                 values = item.split(":", 1)[1]

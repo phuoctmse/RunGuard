@@ -1,6 +1,7 @@
 """Kubernetes evidence collector — gathers pod logs, events, deployment status."""
 
 import asyncio
+
 from kubernetes import client, config
 
 
@@ -26,10 +27,13 @@ class KubernetesEvidenceCollector:
         self.core_api = client.CoreV1Api()
         self.apps_api = client.AppsV1Api()
 
-    async def collect_pod_logs(self, workload: str, tail_lines: int = 100) -> dict:
+    async def collect_pod_logs(
+        self, workload: str, tail_lines: int = 100
+    ) -> dict[str, str]:
         """Collect logs from pods matching the workload name."""
-        evidence: dict = {}
+        evidence: dict[str, str] = {}
         try:
+            assert self.core_api is not None
             pods = self.core_api.list_namespaced_pod(
                 namespace=self.namespace,
                 label_selector=f"app={workload}",
@@ -37,6 +41,7 @@ class KubernetesEvidenceCollector:
             for pod in pods.items:
                 pod_name = pod.metadata.name
                 try:
+                    assert self.core_api is not None
                     logs = self.core_api.read_namespaced_pod_log(
                         name=pod_name,
                         namespace=self.namespace,
@@ -49,28 +54,43 @@ class KubernetesEvidenceCollector:
             evidence["error"] = f"Failed to list pods: {e}"
         return evidence
 
-    async def collect_events(self, workload: str) -> list:
+    async def collect_events(self, workload: str) -> list[dict[str, str]]:
         """Collect Kubernetes events related to the workload."""
-        events = []
+        events: list[dict[str, str]] = []
         try:
+            assert self.core_api is not None
             event_list = self.core_api.list_namespaced_event(
                 namespace=self.namespace,
                 field_selector=f"involvedObject.name={workload}",
             )
             for event in event_list.items:
-                events.append({
-                    "reason": event.reason,
-                    "message": event.message,
-                    "timestamp": event.last_timestamp.isoformat() if event.last_timestamp else "",
-                    "type": event.type,
-                })
+                events.append(
+                    {
+                        "reason": event.reason,
+                        "message": event.message,
+                        "timestamp": (
+                            event.last_timestamp.isoformat()
+                            if event.last_timestamp
+                            else ""
+                        ),
+                        "type": event.type,
+                    }
+                )
         except Exception as e:
-            events.append({"reason": "Error", "message": str(e), "timestamp": "", "type": "Error"})
+            events.append(
+                {
+                    "reason": "Error",
+                    "message": str(e),
+                    "timestamp": "",
+                    "type": "Error",
+                }
+            )
         return events
 
-    async def collect_deployment_status(self, workload: str) -> dict:
+    async def collect_deployment_status(self, workload: str) -> dict[str, object]:
         """Collect deployment status including replicas and conditions."""
         try:
+            assert self.apps_api is not None
             deployment = self.apps_api.read_namespaced_deployment(
                 name=workload,
                 namespace=self.namespace,
@@ -78,12 +98,14 @@ class KubernetesEvidenceCollector:
             conditions = []
             if deployment.status.conditions:
                 for cond in deployment.status.conditions:
-                    conditions.append({
-                        "type": cond.type,
-                        "status": cond.status,
-                        "reason": cond.reason,
-                        "message": cond.message,
-                    })
+                    conditions.append(
+                        {
+                            "type": cond.type,
+                            "status": cond.status,
+                            "reason": cond.reason,
+                            "message": cond.message,
+                        }
+                    )
             return {
                 "name": deployment.metadata.name,
                 "desired_replicas": deployment.spec.replicas,
@@ -94,7 +116,7 @@ class KubernetesEvidenceCollector:
         except Exception as e:
             return {"error": f"Failed to get deployment: {e}"}
 
-    async def collect_all(self, workload: str) -> dict:
+    async def collect_all(self, workload: str) -> dict[str, object]:
         """Collect all available evidence for a workload."""
         logs, events, status = await asyncio.gather(
             self.collect_pod_logs(workload),

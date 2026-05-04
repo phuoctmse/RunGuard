@@ -1,12 +1,14 @@
 """Runbook API routes."""
 
-from fastapi import APIRouter, HTTPException
+from typing import Any
+
+from fastapi import APIRouter
 from pydantic import BaseModel
 
 router = APIRouter(prefix="/runbooks", tags=["runbooks"])
 
 # In-memory store for MVP
-_runbooks: dict = {}
+_runbooks: dict[str, dict[str, Any]] = {}
 
 
 class RunbookCreateRequest(BaseModel):
@@ -15,10 +17,12 @@ class RunbookCreateRequest(BaseModel):
 
 
 @router.post("", status_code=201)
-async def create_or_update_runbook(request: RunbookCreateRequest):
+async def create_or_update_runbook(
+    request: RunbookCreateRequest,
+) -> dict[str, Any]:
     """Create or update a runbook from Markdown content."""
-    from runguard.backend.compiler.parser import parse_runbook_markdown
     from runguard.backend.compiler.extractor import extract_metadata
+    from runguard.backend.compiler.parser import parse_runbook_markdown
 
     sections = parse_runbook_markdown(request.content)
     runbook = extract_metadata(sections, raw_markdown=request.content)
@@ -27,6 +31,6 @@ async def create_or_update_runbook(request: RunbookCreateRequest):
 
 
 @router.get("")
-async def list_runbooks():
+async def list_runbooks() -> list[dict[str, Any]]:
     """List all runbooks."""
     return list(_runbooks.values())

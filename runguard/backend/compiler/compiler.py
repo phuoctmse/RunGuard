@@ -1,9 +1,9 @@
 """Compile a Runbook into a machine-enforceable Policy."""
 
 import uuid
-from runguard.backend.models.runbook import Runbook
-from runguard.backend.models.policy import Policy, AllowedAction, ForbiddenAction
 
+from runguard.backend.models.policy import AllowedAction, ForbiddenAction, Policy
+from runguard.backend.models.runbook import Runbook
 
 # Map tool names to action identifiers
 TOOL_TO_ACTION = {

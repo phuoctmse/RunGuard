@@ -1,10 +1,13 @@
 """LLM-based incident planner using Claude API."""
 
 import json
+from typing import Any
+
 import anthropic
 
-
-PLANNER_PROMPT = """You are an SRE incident analyst. Analyze the following incident and produce a remediation plan.
+PLANNER_PROMPT = """\
+You are an SRE incident analyst. Analyze the following incident \
+and produce a remediation plan.
 
 ## Incident
 - ID: {incident_id}
@@ -19,7 +22,7 @@ PLANNER_PROMPT = """You are an SRE incident analyst. Analyze the following incid
 2. Identify possible root causes with confidence scores (0.0-1.0).
 3. Cite specific evidence that influenced each conclusion.
 4. Propose remediation actions in priority order.
-5. Each action must have: action name, target resource, priority, and reason.
+5. Each action must have: action name, target, priority, and reason.
 
 ## Output Format
 Return a JSON object with exactly this structure:
@@ -34,7 +37,7 @@ Return a JSON object with exactly this structure:
     ],
     "remediation_actions": [
         {{
-            "action": "string - action name (e.g., rollout_restart, scale_deployment, fetch_logs)",
+            "action": "string - e.g. rollout_restart, scale_deployment",
             "target": "string - target resource name",
             "priority": 1,
             "reason": "string - why this action helps"
@@ -48,24 +51,33 @@ Return ONLY the JSON object, no other text."""
 class IncidentPlanner:
     """Generates remediation plans using Claude API."""
 
-    def __init__(self, api_key: str | None = None, model: str = "claude-sonnet-4-20250514"):
+    def __init__(
+        self,
+        api_key: str | None = None,
+        model: str = "claude-sonnet-4-20250514",
+    ):
         self.client = anthropic.AsyncAnthropic(api_key=api_key)
         self.model = model
 
-    def _format_evidence(self, evidence: dict) -> str:
+    def _format_evidence(self, evidence: dict[str, Any]) -> str:
         """Format evidence dict into readable text for the prompt."""
-        parts = []
+        parts: list[str] = []
         if evidence.get("pod_logs"):
             for pod, logs in evidence["pod_logs"].items():
                 parts.append(f"Pod Logs ({pod}):\n{logs[:500]}")
         if evidence.get("events"):
             for event in evidence["events"][:10]:
-                parts.append(f"Event: {event.get('reason', 'Unknown')} - {event.get('message', '')}")
+                reason = event.get("reason", "Unknown")
+                message = event.get("message", "")
+                parts.append(f"Event: {reason} - {message}")
         if evidence.get("deployment_status"):
             status = evidence["deployment_status"]
+            desired = status.get("desired_replicas")
+            ready = status.get("ready_replicas")
+            available = status.get("available_replicas")
             parts.append(
-                f"Deployment Status: desired={status.get('desired_replicas')}, "
-                f"ready={status.get('ready_replicas')}, available={status.get('available_replicas')}"
+                f"Deployment Status: desired={desired}, "
+                f"ready={ready}, available={available}"
             )
         return "\n".join(parts) if parts else "No evidence collected"
 
@@ -73,9 +85,9 @@ class IncidentPlanner:
         self,
         incident_id: str,
         alert_summary: str,
-        evidence: dict,
+        evidence: dict[str, Any],
         runbook_title: str = "",
-    ) -> dict:
+    ) -> dict[str, Any]:
         """Generate a remediation plan from evidence."""
         evidence_text = self._format_evidence(evidence)
         prompt = PLANNER_PROMPT.format(
@@ -91,7 +103,17 @@ class IncidentPlanner:
                 max_tokens=2000,
                 messages=[{"role": "user", "content": prompt}],
             )
-            content = response.content[0].text
-            return json.loads(content)
+            text_blocks = [
+                b.text
+                for b in response.content
+                if hasattr(b, "text")
+            ]
+            content = text_blocks[0] if text_blocks else ""
+            result: dict[str, Any] = json.loads(content)
+            return result
         except Exception:
-            return {"summary": "", "root_causes": [], "remediation_actions": []}
+            return {
+                "summary": "",
+                "root_causes": [],
+                "remediation_actions": [],
+            }
