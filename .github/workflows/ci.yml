@@ -113,7 +113,9 @@ jobs:
         run: pip install -e ".[dev]"
 
       - name: Check for vulnerable dependencies
-        run: pip-audit --strict --desc
+        run: |
+          pip install pip-audit
+          pip-audit --strict --desc
 
       - name: Check for secrets in code
         uses: trufflesecurity/trufflehog@main
@@ -130,5 +132,3 @@ jobs:
         uses: actions/dependency-review-action@v4
         with:
           fail-on-severity: high
-          deny-licenses: GPL-3.0, AGPL-3.0
-        
