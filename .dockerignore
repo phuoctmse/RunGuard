@@ -1,0 +1,15 @@
+__pycache__
+*.pyc
+.git
+.github
+.venv
+.env
+.coverage
+.pytest_cache
+.mypy_cache
+.ruff_cache
+tests/
+specs/
+.claude/
+*.md
+!pyproject.toml

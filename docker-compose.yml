@@ -1,0 +1,27 @@
+name: RunGuard
+
+services:
+  runguard-backend:
+    build: .
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    environment:
+      - PYTHONPATH=/app
+      - RUNGUARD_ENV=${RUNGUARD_ENV:-local}
+      - RUNGUARD_LOG_LEVEL=${RUNGUARD_LOG_LEVEL:-INFO}
+      - RUNGUARD_K8S_NAMESPACE=${RUNGUARD_K8S_NAMESPACE:-runguard}
+    volumes:
+      - ~/.kube:/root/.kube:ro
+      - audit-data:/app/data/audit
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+volumes:
+  audit-data:

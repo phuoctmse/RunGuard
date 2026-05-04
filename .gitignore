@@ -1,6 +1,5 @@
 # Sensitive files - never commit secrets
 .env
-.env.*
 *.pem
 *.key
 *.cert
