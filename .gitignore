@@ -1,6 +1,5 @@
 # Sensitive files - never commit secrets
 .env
-.env.*
 *.pem
 *.key
 *.cert
@@ -47,6 +46,7 @@ build/
 __pycache__/
 *.pyc
 *.pyo
+*.egg-info/
 target/
 *.o
 *.so
@@ -55,6 +55,10 @@ target/
 # Logs
 *.log
 logs/
+
+# Test / Coverage
+.coverage
+htmlcov/
 
 # Temp files
 *.tmp
