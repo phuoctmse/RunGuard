@@ -103,11 +103,7 @@ class IncidentPlanner:
                 max_tokens=2000,
                 messages=[{"role": "user", "content": prompt}],
             )
-            text_blocks = [
-                b.text
-                for b in response.content
-                if hasattr(b, "text")
-            ]
+            text_blocks = [b.text for b in response.content if hasattr(b, "text")]
             content = text_blocks[0] if text_blocks else ""
             result: dict[str, Any] = json.loads(content)
             return result
