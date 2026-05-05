@@ -53,6 +53,18 @@ class ApprovalWorkflow:
         req["rejection_reason"] = reason
         return True
 
+    def get_or_create_request(self, incident_id: str) -> str:
+        """Find existing pending request for incident, or create one."""
+        for req_id, req in self._requests.items():
+            if req["incident_id"] == incident_id and req["status"] == "pending":
+                return req_id
+        return self.create_request(
+            incident_id=incident_id,
+            action_name="pending_action",
+            approver="system",
+            reason="Auto-created for approval workflow",
+        )
+
     def get_status(self, request_id: str) -> dict:
         if request_id not in self._requests:
             return {"status": "not_found"}
