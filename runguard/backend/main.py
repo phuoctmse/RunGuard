@@ -2,6 +2,7 @@
 
 from fastapi import FastAPI
 
+from runguard.backend.api.audit import router as audit_router
 from runguard.backend.api import workflow as workflow_module
 from runguard.backend.api.incidents import router as incidents_router
 from runguard.backend.api.runbooks import router as runbooks_router
@@ -17,6 +18,7 @@ app = FastAPI(
 app.include_router(incidents_router)
 app.include_router(runbooks_router)
 app.include_router(workflow_router)
+app.include_router(audit_router)
 
 workflow_module._workflow = ApprovalWorkflow()
 
