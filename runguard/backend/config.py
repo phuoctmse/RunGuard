@@ -23,6 +23,13 @@ class Settings(BaseSettings):
     llm_max_input_tokens: int = 10000
     llm_max_output_tokens: int = 2000
 
+    # GitOps
+    gitops_enabled: bool = False
+    gitops_repo_path: str = ""
+
+    # Cost tracking
+    opencost_endpoint: str = ""
+
     model_config = {"env_prefix": "RUNGUARD_", "env_file": ".env"}
 
 
