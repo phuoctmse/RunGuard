@@ -56,8 +56,14 @@ def render_incident_list_page() -> None:
         status_filter = st.selectbox(
             "Filter by Status",
             [
-                "All", "pending", "analyzing", "requires_approval",
-                "executing", "resolved", "rejected", "failed",
+                "All",
+                "pending",
+                "analyzing",
+                "requires_approval",
+                "executing",
+                "resolved",
+                "rejected",
+                "failed",
             ],
         )
     with col2:

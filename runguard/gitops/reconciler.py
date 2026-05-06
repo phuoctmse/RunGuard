@@ -52,9 +52,7 @@ class GitOpsReconciler:
         Returns:
             ManifestPatch with the generated patch content
         """
-        patch_content = json.dumps(
-            {"spec": changes}, indent=2, default=str
-        )
+        patch_content = json.dumps({"spec": changes}, indent=2, default=str)
         return ManifestPatch(
             resource_kind=resource_kind,
             resource_name=resource_name,
@@ -118,8 +116,7 @@ class GitOpsReconciler:
             RuntimeError: If git operations fail
         """
         commit_message = (
-            f"runguard(remediation): {incident_id}"
-            f" - {len(patches)} patch(es)"
+            f"runguard(remediation): {incident_id} - {len(patches)} patch(es)"
         )
 
         # Write patches to manifest directory
@@ -127,10 +124,7 @@ class GitOpsReconciler:
         manifests_dir.mkdir(parents=True, exist_ok=True)
 
         for i, patch in enumerate(patches):
-            fname = (
-                f"{patch.resource_kind.lower()}"
-                f"_{patch.resource_name}_{i}.json"
-            )
+            fname = f"{patch.resource_kind.lower()}_{patch.resource_name}_{i}.json"
             patch_file = manifests_dir / fname
             patch_file.write_text(patch.patch_content, encoding="utf-8")
 

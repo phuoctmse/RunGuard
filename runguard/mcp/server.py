@@ -86,9 +86,7 @@ class MCPServer:
                 tool_name=call.tool_name,
                 status="success",
                 data=data,
-                policy_decision=(
-                    decision if policy is not None else None
-                ),
+                policy_decision=(decision if policy is not None else None),
             )
         except Exception as e:
             return ToolResult(

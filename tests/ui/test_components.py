@@ -172,3 +172,34 @@ def test_render_cost_display(mock_st):
 def test_render_cost_display_empty(mock_st):
     render_cost_display({})
     mock_st.metric.assert_not_called()
+
+
+@patch("runguard.ui.components.st")
+def test_render_remediation_plan_root_causes_only(mock_st):
+    plan = {
+        "summary": "",
+        "root_causes": [
+            {"cause": "OOM", "confidence": 0.9, "evidence_refs": ["log"]}
+        ],
+        "remediation_actions": [],
+    }
+    render_remediation_plan(plan)
+    mock_st.subheader.assert_called_once_with("Root Causes")
+
+
+@patch("runguard.ui.components.st")
+def test_render_evidence_with_all_sections(mock_st):
+    mock_st.columns.return_value = [MagicMock(), MagicMock(), MagicMock()]
+    mock_st.expander.return_value.__enter__ = MagicMock()
+    mock_st.expander.return_value.__exit__ = MagicMock()
+    evidence = {
+        "pod_logs": {"pod-1": "logs"},
+        "events": [{"reason": "Pulled", "type": "Normal", "message": "ok"}],
+        "deployment_status": {
+            "desired_replicas": 2,
+            "ready_replicas": 2,
+            "available_replicas": 2,
+        },
+    }
+    render_evidence_section(evidence)
+    assert mock_st.subheader.call_count == 3

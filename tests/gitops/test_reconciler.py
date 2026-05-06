@@ -143,3 +143,37 @@ def test_create_multiple_patches(mock_hash, mock_commit, mock_add, reconciler):
     manifest_dir = Path(reconciler.repo_path) / "manifests" / "inc-006"
     files = list(manifest_dir.iterdir())
     assert len(files) == 3
+
+
+def test_git_add_error(reconciler):
+    with patch("subprocess.run", side_effect=subprocess.CalledProcessError(1, "git")):
+        with pytest.raises(RuntimeError, match="git add failed"):
+            reconciler._git_add("some/path")
+
+
+def test_git_commit_error(reconciler):
+    with patch("subprocess.run", side_effect=subprocess.CalledProcessError(1, "git")):
+        with pytest.raises(RuntimeError, match="git commit failed"):
+            reconciler._git_commit("test message")
+
+
+def test_get_head_hash_error(reconciler):
+    with patch("subprocess.run", side_effect=subprocess.CalledProcessError(1, "git")):
+        with pytest.raises(RuntimeError, match="git rev-parse failed"):
+            reconciler._get_head_hash()
+
+
+def test_generate_manifest_patch_default_description(reconciler):
+    patch = reconciler.generate_manifest_patch(
+        resource_kind="Service",
+        resource_name="my-svc",
+        namespace="default",
+        changes={"type": "ClusterIP"},
+    )
+    assert "Service/my-svc" in patch.description
+
+
+def test_check_reconciliation_file_not_found(reconciler):
+    with patch("subprocess.run", side_effect=FileNotFoundError("git not found")):
+        result = reconciler.check_reconciliation_status("abc123")
+        assert result.status == ReconciliationStatus.FAILED

@@ -68,9 +68,7 @@ class CostTracker:
             cost_entries=entries,
         )
 
-    def get_namespace_cost(
-        self, namespace: str, hours: int = 24
-    ) -> NamespaceCost:
+    def get_namespace_cost(self, namespace: str, hours: int = 24) -> NamespaceCost:
         """Get namespace-level cost from OpenCost/Kubecost.
 
         Args:

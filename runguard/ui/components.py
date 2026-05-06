@@ -132,8 +132,7 @@ def render_remediation_plan(plan: dict[str, Any]) -> None:
         for rc in plan["root_causes"]:
             confidence = rc.get("confidence", 0)
             st.markdown(
-                f"- **{rc.get('cause', 'Unknown')}** "
-                f"(confidence: {confidence:.0%})"
+                f"- **{rc.get('cause', 'Unknown')}** (confidence: {confidence:.0%})"
             )
             if rc.get("evidence_refs"):
                 for ref in rc["evidence_refs"]:
@@ -145,10 +144,7 @@ def render_remediation_plan(plan: dict[str, Any]) -> None:
             action_name = action.get("action", "N/A")
             target = action.get("target", "N/A")
             priority = action.get("priority", "N/A")
-            st.markdown(
-                f"1. **{action_name}** → `{target}` "
-                f"(Priority: {priority})"
-            )
+            st.markdown(f"1. **{action_name}** → `{target}` (Priority: {priority})")
             st.caption(f"   Reason: {action.get('reason', '')}")
 
 

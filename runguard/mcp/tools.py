@@ -189,9 +189,7 @@ async def execute_k8s_describe_pod(
     pod_name = arguments["pod_name"]
     try:
         assert collector.core_api is not None
-        pod = collector.core_api.read_namespaced_pod(
-            name=pod_name, namespace=namespace
-        )
+        pod = collector.core_api.read_namespaced_pod(name=pod_name, namespace=namespace)
         return {
             "name": pod.metadata.name,
             "namespace": pod.metadata.namespace,
@@ -251,9 +249,7 @@ async def execute_cloudwatch_metrics(
         if results:
             return {
                 "metric": metric_name,
-                "timestamps": [
-                    t.isoformat() for t in results[0].get("Timestamps", [])
-                ],
+                "timestamps": [t.isoformat() for t in results[0].get("Timestamps", [])],
                 "values": results[0].get("Values", []),
             }
         return {"metric": metric_name, "timestamps": [], "values": []}
