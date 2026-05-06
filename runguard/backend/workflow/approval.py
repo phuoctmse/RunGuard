@@ -2,6 +2,7 @@
 
 import time
 import uuid
+from typing import Any
 
 
 class ApprovalWorkflow:
@@ -9,7 +10,7 @@ class ApprovalWorkflow:
 
     def __init__(self, expiry_seconds: int = 1800):
         self.expiry_seconds = expiry_seconds
-        self._requests: dict = {}
+        self._requests: dict[str, dict[str, Any]] = {}
 
     def create_request(
         self, incident_id: str, action_name: str, approver: str, reason: str
@@ -57,7 +58,7 @@ class ApprovalWorkflow:
         """Find existing pending request for incident, or create one."""
         for req_id, req in self._requests.items():
             if req["incident_id"] == incident_id and req["status"] == "pending":
-                return req_id
+                return str(req_id)
         return self.create_request(
             incident_id=incident_id,
             action_name="pending_action",
@@ -65,13 +66,14 @@ class ApprovalWorkflow:
             reason="Auto-created for approval workflow",
         )
 
-    def get_status(self, request_id: str) -> dict:
+    def get_status(self, request_id: str) -> dict[str, Any]:
         if request_id not in self._requests:
             return {"status": "not_found"}
         req = self._requests[request_id]
         if req["status"] == "pending" and self._is_expired(req):
             req["status"] = "expired"
-        return req
+        return dict(req)
 
-    def _is_expired(self, req: dict) -> bool:
-        return (time.time() - req["created_at"]) > self.expiry_seconds
+    def _is_expired(self, req: dict[str, Any]) -> bool:
+        created_at: float = req["created_at"]
+        return (time.time() - created_at) > self.expiry_seconds

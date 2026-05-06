@@ -1,11 +1,15 @@
 """Workflow API routes — approve/reject actions."""
 
+from typing import Any
+
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
+from runguard.backend.workflow.approval import ApprovalWorkflow
+
 router = APIRouter(prefix="/incidents", tags=["workflow"])
 
-_workflow = None
+_workflow: ApprovalWorkflow | None = None
 
 
 class ApproveRequest(BaseModel):
@@ -18,7 +22,7 @@ class RejectRequest(BaseModel):
 
 
 @router.post("/{incident_id}/approve")
-async def approve_action(incident_id: str, request: ApproveRequest):
+async def approve_action(incident_id: str, request: ApproveRequest) -> dict[str, Any]:
     if not _workflow:
         raise HTTPException(status_code=500, detail="Workflow not initialized")
     request_id = _workflow.get_or_create_request(incident_id)
@@ -32,7 +36,7 @@ async def approve_action(incident_id: str, request: ApproveRequest):
 
 
 @router.post("/{incident_id}/reject")
-async def reject_action(incident_id: str, request: RejectRequest):
+async def reject_action(incident_id: str, request: RejectRequest) -> dict[str, Any]:
     if not _workflow:
         raise HTTPException(status_code=500, detail="Workflow not initialized")
     request_id = _workflow.get_or_create_request(incident_id)

@@ -1,17 +1,19 @@
 """EventBridge event intake — parses CloudWatch and Prometheus alerts."""
 
+from typing import Any
+
 
 class EventBridgeIntake:
     """Parses incoming events from EventBridge and creates incident data."""
 
-    def parse_event(self, event: dict) -> dict:
+    def parse_event(self, event: dict[str, Any]) -> dict[str, Any]:
         if event.get("source") == "aws.cloudwatch":
             return self._parse_cloudwatch(event)
         elif event.get("alerts"):
             return self._parse_prometheus(event)
         return {"source": "unknown", "severity": "medium", "raw_alert": str(event)}
 
-    def _parse_cloudwatch(self, event: dict) -> dict:
+    def _parse_cloudwatch(self, event: dict[str, Any]) -> dict[str, Any]:
         detail = event.get("detail", {})
         alarm_name = detail.get("alarmName", "unknown")
         state = detail.get("state", {})
@@ -26,7 +28,7 @@ class EventBridgeIntake:
             "workload": alarm_name,
         }
 
-    def _parse_prometheus(self, event: dict) -> dict:
+    def _parse_prometheus(self, event: dict[str, Any]) -> dict[str, Any]:
         alerts = event.get("alerts", [])
         if not alerts:
             return {
@@ -40,9 +42,7 @@ class EventBridgeIntake:
         return {
             "source": "prometheus",
             "severity": labels.get("severity", "medium"),
-            "raw_alert": annotations.get(
-                "summary", labels.get("alertname", "Unknown")
-            ),
+            "raw_alert": annotations.get("summary", labels.get("alertname", "Unknown")),
             "environment": "dev",
             "namespace": labels.get("namespace", "default"),
             "workload": labels.get("pod", labels.get("deployment", "unknown")),

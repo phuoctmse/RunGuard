@@ -1,5 +1,7 @@
 """SSM document executor — triggers AWS Systems Manager documents."""
 
+from typing import Any
+
 import boto3
 
 
@@ -13,8 +15,8 @@ class SSMExecutor:
         self,
         document_name: str,
         targets: list[str],
-        parameters: dict | None = None,
-    ) -> dict:
+        parameters: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
         try:
             response = self.ssm.send_command(
                 DocumentName=document_name,
@@ -30,7 +32,7 @@ class SSMExecutor:
         except Exception as e:
             return {"status": "failed", "error": str(e)}
 
-    def get_execution_status(self, execution_id: str) -> dict:
+    def get_execution_status(self, execution_id: str) -> dict[str, Any]:
         try:
             response = self.ssm.list_commands(CommandId=execution_id)
             commands = response.get("Commands", [])
