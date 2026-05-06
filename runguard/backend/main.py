@@ -2,8 +2,11 @@
 
 from fastapi import FastAPI
 
+from runguard.backend.api import workflow as workflow_module
 from runguard.backend.api.incidents import router as incidents_router
 from runguard.backend.api.runbooks import router as runbooks_router
+from runguard.backend.api.workflow import router as workflow_router
+from runguard.backend.workflow.approval import ApprovalWorkflow
 
 app = FastAPI(
     title="RunGuard",
@@ -13,6 +16,9 @@ app = FastAPI(
 
 app.include_router(incidents_router)
 app.include_router(runbooks_router)
+app.include_router(workflow_router)
+
+workflow_module._workflow = ApprovalWorkflow()
 
 
 @app.get("/health")

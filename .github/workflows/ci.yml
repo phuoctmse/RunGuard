@@ -26,6 +26,9 @@ jobs:
         with:
           python-version: ${{ env.PYTHON_VERSION_DEFAULT }}
           cache: pip
+          cache-dependency-path: |
+            pyproject.toml
+            requirements*.txt
 
       - name: Install dependencies
         run: pip install -e ".[dev]"
@@ -45,6 +48,9 @@ jobs:
         with:
           python-version: ${{ env.PYTHON_VERSION_DEFAULT }}
           cache: pip
+          cache-dependency-path: |
+            pyproject.toml
+            requirements*.txt
 
       - name: Install dependencies
         run: pip install -e ".[dev]"
@@ -65,6 +71,9 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
           cache: pip
+          cache-dependency-path: |
+            pyproject.toml
+            requirements*.txt
 
       - name: Install dependencies
         run: pip install -e ".[dev]"
@@ -108,6 +117,9 @@ jobs:
         with:
           python-version: ${{ env.PYTHON_VERSION_DEFAULT }}
           cache: pip
+          cache-dependency-path: |
+            pyproject.toml
+            requirements*.txt
 
       - name: Install dependencies
         run: pip install -e ".[dev]"
@@ -133,3 +145,30 @@ jobs:
         uses: actions/dependency-review-action@v4
         with:
           fail-on-severity: high
+
+  notify-failure:
+    needs: [ lint, type-check, test, security-check ]
+    if: failure()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Notify Slack on failure
+        if: env.SLACK_WEBHOOK != ''
+        uses: slackapi/slack-github-action@v2
+        with:
+          webhook: ${{ secrets.SLACK_WEBHOOK }}
+          webhook-type: incoming-webhook
+          payload: |
+            {
+              "text": "CI failed on ${{ github.ref_name }}",
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": ":x: *CI Failed* on `${{ github.repository }}`\nBranch: `${{ github.ref_name }}`\nCommit: `${{ github.sha }}`\n<${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|View Run>"
+                  }
+                }
+              ]
+            }
+        env:
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}

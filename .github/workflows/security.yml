@@ -1,0 +1,115 @@
+name: Security
+
+on:
+  schedule:
+    - cron: "0 8 * * 1" # Every Monday 8am UTC
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  security-events: write # Required for SARIF upload
+
+jobs:
+  codeql:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        language: [ python ]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: ${{ matrix.language }}
+          queries: security-extended, security-and-quality
+
+      - name: Autobuild
+        uses: github/codeql-action/autobuild@v3
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v3
+        with:
+          category: "/language:${{ matrix.language }}"
+
+  semgrep:
+    runs-on: ubuntu-latest
+    container:
+      image: semgrep/semgrep
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run Semgrep
+        continue-on-error: true
+        run: semgrep ci --config auto --sarif --output=semgrep.sarif
+        env:
+          SEMGREP_APP_TOKEN: ${{ secrets.SEMGREP_APP_TOKEN }}
+
+      - name: Upload SARIF
+        if: hashFiles('semgrep.sarif') != ''
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: semgrep.sarif
+
+  supply-chain:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: |
+            pyproject.toml
+            requirements*.txt
+
+      - name: Upgrade pip
+        run: pip install --upgrade pip
+
+      - name: Verify dependencies (pip-audit)
+        run: |
+          pip install pip-audit
+          pip-audit --desc
+
+      - name: Generate SBOM
+        uses: anchore/sbom-action@v0
+        with:
+          format: spdx-json
+          output-file: sbom.spdx.json
+
+      - name: Upload SBOM
+        uses: actions/upload-artifact@v4
+        with:
+          name: sbom
+          path: sbom.spdx.json
+          retention-days: 90
+
+  notify-failure:
+    needs: [ codeql, semgrep, supply-chain ]
+    if: failure()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Notify Slack on failure
+        if: env.SLACK_WEBHOOK != ''
+        uses: slackapi/slack-github-action@v2
+        with:
+          webhook: ${{ secrets.SLACK_WEBHOOK }}
+          webhook-type: incoming-webhook
+          payload: |
+            {
+              "text": "CI failed on ${{ github.ref_name }}",
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": ":x: *CI Failed* on `${{ github.repository }}`\nBranch: `${{ github.ref_name }}`\nCommit: `${{ github.sha }}`\n<${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|View Run>"
+                  }
+                }
+              ]
+            }
+        env:
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
