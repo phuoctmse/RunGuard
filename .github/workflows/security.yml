@@ -66,10 +66,13 @@ jobs:
             pyproject.toml
             requirements*.txt
 
+      - name: Upgrade pip
+        run: pip install --upgrade pip
+
       - name: Verify dependencies (pip-audit)
         run: |
           pip install pip-audit
-          pip-audit --desc --fix --dry-run
+          pip-audit --desc
 
       - name: Generate SBOM
         uses: anchore/sbom-action@v0
