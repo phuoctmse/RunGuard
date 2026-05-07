@@ -77,6 +77,7 @@ def test_create_incident_special_characters():
             "namespace": "default",
             "workload": "web-app",
             "raw_alert": "Pod CrashLoopBackOff: error=\"connection refused\" to db:5432 (retries=3/3)",
+            "runbook_id": "rb-test",
         },
     )
     assert response.status_code == 201
@@ -94,6 +95,7 @@ def test_create_incident_unicode():
             "namespace": "default",
             "workload": "web-app",
             "raw_alert": "Pod sự cố: kết nối thất bại",
+            "runbook_id": "rb-test",
         },
     )
     assert response.status_code == 201
@@ -107,7 +109,7 @@ def test_create_multiple_incidents_unique_ids():
         response = client.post(
             "/incidents",
             json={
-                "source": "manual",
+                "source": "prometheus",
                 "severity": "low",
                 "environment": "dev",
                 "namespace": "default",
@@ -145,6 +147,7 @@ def test_create_incident_extra_fields_ignored():
             "namespace": "default",
             "workload": "web-app",
             "raw_alert": "test",
+            "runbook_id": "rb-test",
             "unknown_field": "should be ignored",
         },
     )

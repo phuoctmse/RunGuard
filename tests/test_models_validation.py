@@ -8,6 +8,13 @@ from runguard.backend.models.runbook import Runbook
 from runguard.backend.models.policy import Policy, AllowedAction, ForbiddenAction, PolicyScope
 from runguard.backend.models.incident import Incident, IncidentSeverity, IncidentSource, IncidentStatus
 from runguard.backend.models.audit import AuditRecord
+from runguard.backend.models.plan import (
+    RemediationAction,
+    RemediationPlan,
+    ActionStatus,
+    PolicyDecision,
+    RootCause,
+)
 
 
 # === Runbook ===
@@ -245,3 +252,143 @@ def test_audit_record_json_roundtrip():
     assert restored.event_type == original.event_type
     assert restored.details == original.details
     assert restored.id == original.id
+
+
+# === Incident runbook_id / plan_id ===
+
+def test_incident_runbook_id_optional():
+    """runbook_id should default to None."""
+    i = Incident(
+        id="inc-1", source="prometheus", severity="high",
+        environment="dev", namespace="default", workload="web-app",
+        raw_alert="test",
+    )
+    assert i.runbook_id is None
+    assert i.plan_id is None
+
+
+def test_incident_with_runbook_id():
+    """Should accept runbook_id."""
+    i = Incident(
+        id="inc-1", source="manual", severity="high",
+        environment="dev", namespace="default", workload="web-app",
+        raw_alert="test", runbook_id="rb-abc",
+    )
+    assert i.runbook_id == "rb-abc"
+
+
+def test_incident_serialization_includes_runbook_id():
+    """Serialized incident should include runbook_id and plan_id."""
+    i = Incident(
+        id="inc-1", source="manual", severity="high",
+        environment="dev", namespace="default", workload="web-app",
+        raw_alert="test", runbook_id="rb-abc", plan_id="plan-xyz",
+    )
+    data = i.model_dump()
+    assert data["runbook_id"] == "rb-abc"
+    assert data["plan_id"] == "plan-xyz"
+
+
+# === RemediationPlan ===
+
+def test_remediation_plan_defaults():
+    """Should have correct defaults."""
+    p = RemediationPlan(id="plan-1", incident_id="inc-1")
+    assert p.actions == []
+    assert p.summary == ""
+    assert p.root_causes == []
+
+
+def test_remediation_plan_with_actions():
+    """Should hold a list of RemediationAction."""
+    action = RemediationAction(
+        id="act-1", plan_id="plan-1", name="rollout_restart",
+        target="web-app",
+    )
+    p = RemediationPlan(
+        id="plan-1", incident_id="inc-1",
+        summary="Restart pods", actions=[action],
+    )
+    assert len(p.actions) == 1
+    assert p.actions[0].name == "rollout_restart"
+
+
+def test_remediation_plan_json_roundtrip():
+    """Should survive JSON roundtrip."""
+    original = RemediationPlan(
+        id="plan-1", incident_id="inc-1",
+        summary="Fix OOM", root_causes=[
+            RootCause(cause="OOM", confidence=0.9, evidence=["log"]),
+        ],
+    )
+    json_str = original.model_dump_json()
+    restored = RemediationPlan.model_validate_json(json_str)
+    assert restored.id == original.id
+    assert restored.root_causes[0].confidence == 0.9
+
+
+# === RemediationAction ===
+
+def test_remediation_action_defaults():
+    """Should have correct defaults."""
+    a = RemediationAction(id="act-1", plan_id="plan-1", name="rollout_restart", target="web-app")
+    assert a.namespace == "default"
+    assert a.parameters == {}
+    assert a.blast_radius == "low"
+    assert a.rollback_path == ""
+    assert a.status == ActionStatus.PENDING
+    assert a.policy_decision == PolicyDecision.REQUIRES_APPROVAL
+    assert a.executed_at is None
+
+
+def test_remediation_action_status_enum():
+    """All status values should be valid."""
+    for status in ActionStatus:
+        a = RemediationAction(
+            id="act-1", plan_id="plan-1", name="test", target="t", status=status,
+        )
+        assert a.status == status
+
+
+def test_remediation_action_policy_decision_enum():
+    """All policy decision values should be valid."""
+    for decision in PolicyDecision:
+        a = RemediationAction(
+            id="act-1", plan_id="plan-1", name="test", target="t",
+            policy_decision=decision,
+        )
+        assert a.policy_decision == decision
+
+
+def test_remediation_action_json_roundtrip():
+    """Should survive JSON roundtrip."""
+    original = RemediationAction(
+        id="act-1", plan_id="plan-1", name="scale_replicas",
+        target="api", namespace="prod", parameters={"replicas": 3},
+        blast_radius="medium", rollback_path="scale to 1",
+    )
+    json_str = original.model_dump_json()
+    restored = RemediationAction.model_validate_json(json_str)
+    assert restored.id == original.id
+    assert restored.parameters == {"replicas": 3}
+    assert restored.blast_radius == "medium"
+
+
+# === RootCause ===
+
+def test_root_cause_defaults():
+    """Should have correct defaults."""
+    r = RootCause(cause="OOM")
+    assert r.confidence == 0.0
+    assert r.evidence == []
+
+
+def test_root_cause_with_data():
+    """Should hold cause, confidence, evidence."""
+    r = RootCause(
+        cause="Memory limit too low",
+        confidence=0.95,
+        evidence=["OOMKilled in pod logs", "memory at 98%"],
+    )
+    assert r.confidence == 0.95
+    assert len(r.evidence) == 2
