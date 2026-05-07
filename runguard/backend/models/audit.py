@@ -17,6 +17,7 @@ class AuditEventType(StrEnum):
     ACTION_AUTO_APPROVED = "action_auto_approved"
     APPROVED = "approved"
     REJECTED = "rejected"
+    EXECUTION_STARTED = "execution_started"
     ACTION_EXECUTED = "action_executed"
     ACTION_FAILED = "action_failed"
     GITOPS_COMMIT = "gitops_commit"

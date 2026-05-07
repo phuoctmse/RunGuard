@@ -21,11 +21,17 @@ class IncidentCreateRequest(BaseModel):
     namespace: str
     workload: str
     raw_alert: str
+    runbook_id: str | None = None  # required for manual incidents
 
 
 @router.post("", status_code=201)
 async def create_incident(request: IncidentCreateRequest) -> dict[str, Any]:
     """Create a new incident from alert or manual input."""
+    if request.source == "manual" and not request.runbook_id:
+        raise HTTPException(
+            status_code=400,
+            detail="Manual incidents require runbook_id",
+        )
     incident_id = f"inc-{uuid.uuid4().hex[:8]}"
     incident = {
         "id": incident_id,
@@ -35,6 +41,8 @@ async def create_incident(request: IncidentCreateRequest) -> dict[str, Any]:
         "namespace": request.namespace,
         "workload": request.workload,
         "raw_alert": request.raw_alert,
+        "runbook_id": request.runbook_id,
+        "plan_id": None,
         "status": "pending",
         "created_at": datetime.now(UTC).isoformat(),
         "updated_at": datetime.now(UTC).isoformat(),
