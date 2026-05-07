@@ -76,7 +76,10 @@ def _check_all_approved(incident_id: str) -> bool:
         return False
 
     for action in plan["actions"]:
-        if action.get("policy_decision") == "requires_approval" and action.get("status") != "approved":
+        if (
+            action.get("policy_decision") == "requires_approval"
+            and action.get("status") != "approved"
+        ):
             return False
     return True
 
@@ -110,7 +113,10 @@ async def approve_single_action(
 
     plan = _plans.get(incident_id)
     if not plan or not plan.get("actions"):
-        raise HTTPException(status_code=404, detail=f"Action {action_id} not found in incident plan")
+        raise HTTPException(
+            status_code=404,
+            detail=f"Action {action_id} not found in incident plan",
+        )
 
     target_action = None
     for action in plan["actions"]:
@@ -119,18 +125,25 @@ async def approve_single_action(
             break
 
     if target_action is None:
-        raise HTTPException(status_code=404, detail=f"Action {action_id} not found in incident plan")
+        raise HTTPException(
+            status_code=404,
+            detail=f"Action {action_id} not found in incident plan",
+        )
 
     if target_action.get("policy_decision") == "blocked":
+        reason = target_action.get("policy_reason", "unknown")
         raise HTTPException(
             status_code=400,
-            detail=f"Action {action_id} is blocked by policy: {target_action.get('policy_reason', 'unknown')}",
+            detail=f"Action {action_id} is blocked by policy: {reason}",
         )
 
     if target_action.get("status") == "approved":
-        return {"status": "already_approved", "action_id": action_id, "incident_id": incident_id}
+        return {
+            "status": "already_approved",
+            "action_id": action_id,
+            "incident_id": incident_id,
+        }
 
-    approver = request.approver if request else "dashboard-user"
     target_action["status"] = "approved"
 
     # Check if all requires_approval actions are now approved → auto-transition

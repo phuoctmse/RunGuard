@@ -45,7 +45,7 @@ class Incident(BaseModel):
     namespace: str
     workload: str
     raw_alert: str
-    runbook_id: str | None = None  # required for manual incidents; auto-matched for webhooks
+    runbook_id: str | None = None  # required for manual; auto-matched for webhooks
     plan_id: str | None = None  # set when remediation plan is generated
     status: IncidentStatus = IncidentStatus.PENDING
     created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
