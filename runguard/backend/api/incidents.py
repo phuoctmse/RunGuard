@@ -9,6 +9,7 @@ from pydantic import BaseModel
 
 from runguard.backend.ai.reasoner import AIReasoner
 from runguard.backend.audit.store import AuditStore
+from runguard.backend.executor.actions import execute_action
 from runguard.backend.models.audit import AuditEventType, AuditRecord
 
 router = APIRouter(prefix="/incidents", tags=["incidents"])
@@ -186,3 +187,97 @@ async def analyze_incident(incident_id: str) -> dict[str, Any]:
         "status": incident["status"],
         "plan": plan,
     }
+
+
+@router.post("/{incident_id}/execute")
+async def execute_incident(incident_id: str) -> dict[str, Any]:
+    """Execute approved remediation actions for an incident."""
+    if incident_id not in _incidents:
+        raise HTTPException(status_code=404, detail="Incident not found")
+
+    incident = _incidents[incident_id]
+    if incident["status"] != "approved":
+        raise HTTPException(
+            status_code=400,
+            detail=(
+                f"Incident {incident_id} not in approved state "
+                f"(current: {incident['status']})"
+            ),
+        )
+
+    plan = _plans.get(incident_id)
+    if not plan or not plan.get("actions"):
+        raise HTTPException(
+            status_code=400,
+            detail=f"No plan found for incident {incident_id}",
+        )
+
+    incident["status"] = "executing"
+    _audit_store.write(
+        AuditRecord(
+            incident_id=incident_id,
+            event_type=AuditEventType.EXECUTION_STARTED,
+        )
+    )
+
+    results: list[dict[str, Any]] = []
+    has_failure = False
+
+    for action in plan["actions"]:
+        if action.get("policy_decision") == "blocked":
+            continue
+        if action.get("status") not in ("approved",):
+            continue
+
+        result = execute_action(
+            action_name=action["name"],
+            target=action["target"],
+            namespace=action.get("namespace", "default"),
+            parameters=action.get("parameters", {}),
+        )
+        results.append(
+            {
+                "action_id": action["id"],
+                "name": action["name"],
+                "status": result["status"],
+                "output": result.get("output", ""),
+                "error": result.get("error", ""),
+            }
+        )
+
+        if result["status"] == "completed":
+            action["status"] = "completed"
+            _audit_store.write(
+                AuditRecord(
+                    incident_id=incident_id,
+                    event_type=AuditEventType.ACTION_EXECUTED,
+                    details={"action_id": action["id"], "name": action["name"]},
+                )
+            )
+        else:
+            action["status"] = "failed"
+            has_failure = True
+            _audit_store.write(
+                AuditRecord(
+                    incident_id=incident_id,
+                    event_type=AuditEventType.ACTION_FAILED,
+                    details={
+                        "action_id": action["id"],
+                        "name": action["name"],
+                        "error": result.get("error", ""),
+                    },
+                )
+            )
+
+    incident["status"] = "failed" if has_failure else "resolved"
+
+    from fastapi.responses import JSONResponse
+
+    return JSONResponse(
+        status_code=207 if has_failure else 200,
+        content={
+            "incident_id": incident_id,
+            "status": incident["status"],
+            "results": results,
+        },
+    )
