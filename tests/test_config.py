@@ -1,9 +1,18 @@
 """Tests for configuration management."""
 
 
-def test_settings_defaults():
+def test_settings_defaults(monkeypatch):
     """Settings should have correct default values."""
     from runguard.backend.config import Settings
+
+    # Clear env vars that may leak from other tests
+    for var in [
+        "RUNGUARD_WEBHOOK_SECRET",
+        "RUNGUARD_ANTHROPIC_API_KEY",
+        "RUNGUARD_SLACK_WEBHOOK_URL",
+        "RUNGUARD_API_KEY",
+    ]:
+        monkeypatch.delenv(var, raising=False)
 
     s = Settings()
     assert s.runguard_env == "local"
