@@ -2,9 +2,19 @@
 
 import json
 import os
+import re
 import uuid
 
 from runguard.backend.models.audit import AuditRecord
+
+_SAFE_ID_RE = re.compile(r"^[a-zA-Z0-9_-]{1,128}$")
+
+
+def _validate_incident_id(incident_id: str) -> str:
+    """Validate incident_id to prevent path traversal."""
+    if not _SAFE_ID_RE.match(incident_id):
+        raise ValueError(f"Invalid incident_id: {incident_id!r}")
+    return incident_id
 
 
 class AuditStore:
@@ -16,6 +26,8 @@ class AuditStore:
 
     def write(self, record: AuditRecord) -> str:
         """Write an audit record. Returns the record ID."""
+        _validate_incident_id(record.incident_id)
+
         if not record.id:
             record.id = f"aud-{uuid.uuid4().hex[:12]}"
 
@@ -33,6 +45,8 @@ class AuditStore:
 
     def read(self, incident_id: str) -> list[AuditRecord]:
         """Read all audit records for an incident in chronological order."""
+        _validate_incident_id(incident_id)
+
         incident_dir = os.path.join(self.store_path, incident_id)
         if not os.path.exists(incident_dir):
             return []

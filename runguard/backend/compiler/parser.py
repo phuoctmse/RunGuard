@@ -1,6 +1,5 @@
 """Markdown runbook parser — extracts sections from Markdown."""
 
-import re
 from typing import Any
 
 
@@ -37,10 +36,11 @@ def parse_runbook_markdown(markdown: str) -> dict[str, Any]:
             continue
 
         # Parse numbered list items (for rollback steps)
-        match = re.match(r"^\d+\.\s+(.+)$", stripped)
-        if match and current_section:
-            sections[current_section].append(match.group(1).strip())
-            continue
+        if current_section and stripped and stripped[0].isdigit():
+            dot_pos = stripped.find(". ")
+            if dot_pos > 0 and stripped[:dot_pos].isdigit():
+                sections[current_section].append(stripped[dot_pos + 2:].strip())
+                continue
 
         # Severity is a plain text line (not a list)
         if current_section == "severity" and stripped and not stripped.startswith("-"):
