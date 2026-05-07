@@ -9,8 +9,10 @@ from pydantic import BaseModel
 
 from runguard.backend.ai.reasoner import AIReasoner
 from runguard.backend.audit.store import AuditStore
+from runguard.backend.config import settings
 from runguard.backend.executor.actions import execute_action
 from runguard.backend.models.audit import AuditEventType, AuditRecord
+from runguard.backend.notifications.slack import SlackNotifier
 
 router = APIRouter(prefix="/incidents", tags=["incidents"])
 
@@ -26,6 +28,16 @@ def _get_reasoner() -> AIReasoner:
     if _ai_reasoner is None:
         _ai_reasoner = AIReasoner()
     return _ai_reasoner
+
+
+_slack: SlackNotifier | None = None
+
+
+def _get_slack() -> SlackNotifier | None:
+    global _slack
+    if _slack is None and settings.slack_webhook_url:
+        _slack = SlackNotifier(webhook_url=settings.slack_webhook_url)
+    return _slack
 
 
 class IncidentCreateRequest(BaseModel):
@@ -220,6 +232,7 @@ async def execute_incident(incident_id: str) -> dict[str, Any]:
         )
     )
 
+    slack = _get_slack()
     results: list[dict[str, Any]] = []
     has_failure = False
 
@@ -254,6 +267,11 @@ async def execute_incident(incident_id: str) -> dict[str, Any]:
                     details={"action_id": action["id"], "name": action["name"]},
                 )
             )
+            if slack:
+                try:
+                    await slack.send_action_executed(incident_id, action["name"])
+                except Exception:
+                    pass  # fire-and-forget
         else:
             action["status"] = "failed"
             has_failure = True
@@ -268,8 +286,23 @@ async def execute_incident(incident_id: str) -> dict[str, Any]:
                     },
                 )
             )
+            if slack:
+                try:
+                    await slack.send_action_failed(
+                        incident_id, action["name"], result.get("error", "")
+                    )
+                except Exception:
+                    pass  # fire-and-forget
 
     incident["status"] = "failed" if has_failure else "resolved"
+
+    if not has_failure and slack:
+        try:
+            await slack.send_resolved(
+                incident_id, plan.get("summary", "All actions completed")
+            )
+        except Exception:
+            pass  # fire-and-forget
 
     from fastapi.responses import JSONResponse
 
