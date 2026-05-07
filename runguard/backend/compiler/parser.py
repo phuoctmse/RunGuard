@@ -39,7 +39,7 @@ def parse_runbook_markdown(markdown: str) -> dict[str, Any]:
         if current_section and stripped and stripped[0].isdigit():
             dot_pos = stripped.find(". ")
             if dot_pos > 0 and stripped[:dot_pos].isdigit():
-                sections[current_section].append(stripped[dot_pos + 2:].strip())
+                sections[current_section].append(stripped[dot_pos + 2 :].strip())
                 continue
 
         # Severity is a plain text line (not a list)
