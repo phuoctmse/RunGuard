@@ -165,8 +165,26 @@ def test_compile_without_rollback_empty_path():
 
 
 def test_tool_to_action_mapping_completeness():
-    """TOOL_TO_ACTION should map all standard tools."""
-    expected_tools = {"rollout restart", "scale deployment", "fetch logs", "run job", "trigger ssm"}
+    """TOOL_TO_ACTION should map all standard tools (both formats)."""
+    expected_tools = {
+        # Spec format (underscore)
+        "rollout_restart",
+        "scale_replicas",
+        "update_image",
+        "delete_pod",
+        "fetch_logs",
+        "patch_config",
+        # Legacy format (space-separated)
+        "rollout restart",
+        "scale deployment",
+        "scale replicas",
+        "update image",
+        "delete pod",
+        "fetch logs",
+        "patch config",
+        "run job",
+        "trigger ssm",
+    }
     assert set(TOOL_TO_ACTION.keys()) == expected_tools
 
 

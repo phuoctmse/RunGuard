@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: runguard-config
+  namespace: runguard
+data:
+  API_URL: "http://api.runguard.svc.cluster.local:8000"
+  DRY_RUN: "false"

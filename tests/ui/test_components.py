@@ -50,7 +50,7 @@ def test_render_dry_run_indicator_inactive(mock_st):
 
 @patch("runguard.ui.components.st")
 def test_render_incident_card(mock_st):
-    mock_st.columns.return_value = [MagicMock(), MagicMock(), MagicMock()]
+    mock_st.columns.return_value = [MagicMock(), MagicMock(), MagicMock(), MagicMock()]
     incident = {
         "id": "inc-001",
         "workload": "my-app",

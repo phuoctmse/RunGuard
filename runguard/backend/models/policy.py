@@ -3,6 +3,13 @@
 from pydantic import BaseModel
 
 
+class PolicyScope(BaseModel):
+    """Scope constraints for a policy."""
+
+    namespaces: list[str] = []
+    workloads: list[str] = []
+
+
 class AllowedAction(BaseModel):
     """An action permitted by the policy."""
 
@@ -24,6 +31,8 @@ class Policy(BaseModel):
 
     id: str
     runbook_id: str
+    scope: PolicyScope = PolicyScope()
     allowed_actions: list[AllowedAction] = []
     forbidden_actions: list[ForbiddenAction] = []
+    severity: str = "medium"
     max_blast_radius_threshold: float = 0.3

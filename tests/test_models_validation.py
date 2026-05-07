@@ -5,8 +5,8 @@ from pydantic import ValidationError
 from datetime import datetime, timezone
 
 from runguard.backend.models.runbook import Runbook
-from runguard.backend.models.policy import Policy, AllowedAction, ForbiddenAction
-from runguard.backend.models.incident import Incident, IncidentStatus
+from runguard.backend.models.policy import Policy, AllowedAction, ForbiddenAction, PolicyScope
+from runguard.backend.models.incident import Incident, IncidentSeverity, IncidentSource, IncidentStatus
 from runguard.backend.models.audit import AuditRecord
 
 
@@ -69,6 +69,9 @@ def test_policy_defaults():
     assert p.allowed_actions == []
     assert p.forbidden_actions == []
     assert p.max_blast_radius_threshold == 0.3
+    assert p.severity == "medium"
+    assert p.scope.namespaces == []
+    assert p.scope.workloads == []
 
 
 def test_allowed_action_defaults():
@@ -90,12 +93,17 @@ def test_policy_serialization():
     p = Policy(
         id="pol-1",
         runbook_id="rb-1",
+        scope=PolicyScope(namespaces=["default"], workloads=["web-app"]),
         allowed_actions=[AllowedAction(name="rollout_restart", blast_radius="low")],
         forbidden_actions=[ForbiddenAction(name="delete", reason="blocked")],
+        severity="high",
     )
     data = p.model_dump()
     assert data["allowed_actions"][0]["name"] == "rollout_restart"
     assert data["forbidden_actions"][0]["reason"] == "blocked"
+    assert data["scope"]["namespaces"] == ["default"]
+    assert data["scope"]["workloads"] == ["web-app"]
+    assert data["severity"] == "high"
 
 
 # === Incident ===
@@ -179,6 +187,21 @@ def test_incident_serialization():
     assert "created_at" in data
 
 
+def test_incident_severity_enum_values():
+    """Severity enum should have all spec values."""
+    assert IncidentSeverity.LOW == "low"
+    assert IncidentSeverity.MEDIUM == "medium"
+    assert IncidentSeverity.HIGH == "high"
+    assert IncidentSeverity.CRITICAL == "critical"
+
+
+def test_incident_source_enum_values():
+    """Source enum should have all spec values."""
+    assert IncidentSource.PROMETHEUS == "prometheus"
+    assert IncidentSource.CLOUDWATCH == "cloudwatch"
+    assert IncidentSource.MANUAL == "manual"
+
+
 # === AuditRecord ===
 
 def test_audit_record_defaults():
@@ -186,6 +209,7 @@ def test_audit_record_defaults():
     r = AuditRecord(incident_id="inc-1", event_type="test")
     assert r.details == {}
     assert r.id == ""
+    assert r.actor == "system"
     assert r.timestamp is not None
 
 

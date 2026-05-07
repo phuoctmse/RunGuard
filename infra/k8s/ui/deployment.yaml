@@ -1,0 +1,50 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ui
+  namespace: runguard
+spec:
+  selector:
+    matchLabels:
+      app: ui
+  template:
+    metadata:
+      labels:
+        app: ui
+    spec:
+      containers:
+        - name: ui
+          image: runguard:latest
+          imagePullPolicy: Never
+          resources:
+            limits:
+              memory: "256Mi"
+              cpu: "250m"
+          ports:
+            - containerPort: 8501
+          command:
+            [
+              "streamlit",
+              "run",
+              "runguard/ui/app.py",
+              "--server.address",
+              "0.0.0.0",
+              "--server.port",
+              "8501",
+            ]
+          envFrom:
+            - configMapRef:
+                name: runguard-config
+          livenessProbe:
+            httpGet:
+              path: _stcore/health
+              port: 8501
+            initialDelaySeconds: 10
+            periodSeconds: 30
+          readinessProbe:
+            httpGet:
+              path: _stcore/health
+              port: 8501
+            initialDelaySeconds: 5
+            periodSeconds: 10
+  replicas: 1

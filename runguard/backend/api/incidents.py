@@ -11,6 +11,7 @@ router = APIRouter(prefix="/incidents", tags=["incidents"])
 
 # In-memory store for MVP (replace with DynamoDB later)
 _incidents: dict[str, dict[str, Any]] = {}
+_plans: dict[str, dict[str, Any]] = {}
 
 
 class IncidentCreateRequest(BaseModel):
@@ -42,9 +43,23 @@ async def create_incident(request: IncidentCreateRequest) -> dict[str, Any]:
     return incident
 
 
+@router.get("")
+async def list_incidents() -> list[dict[str, Any]]:
+    """List all incidents."""
+    return list(_incidents.values())
+
+
 @router.get("/{incident_id}")
 async def get_incident(incident_id: str) -> dict[str, Any]:
     """Get incident details by ID."""
     if incident_id not in _incidents:
         raise HTTPException(status_code=404, detail="Incident not found")
     return _incidents[incident_id]
+
+
+@router.get("/{incident_id}/plan")
+async def get_incident_plan(incident_id: str) -> dict[str, Any]:
+    """Get remediation plan for an incident."""
+    if incident_id not in _incidents:
+        raise HTTPException(status_code=404, detail="Incident not found")
+    return _plans.get(incident_id, {})

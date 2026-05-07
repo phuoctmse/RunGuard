@@ -5,12 +5,12 @@
 - Workloads: web-app, api-server
 
 ## Allowed Tools
-- fetch logs
-- scale deployment
+- fetch_logs
+- scale_replicas
 
 ## Forbidden Tools
-- delete deployment
-- patch readiness probe
+- delete_pod
+- patch_config
 
 ## Severity
 medium
