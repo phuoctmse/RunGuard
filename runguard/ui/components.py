@@ -49,7 +49,7 @@ def render_incident_card(incident: dict[str, Any]) -> None:
     icon = STATUS_ICONS.get(status, "")
 
     with st.container():
-        col1, col2, col3 = st.columns([3, 1, 1])
+        col1, col2, col3, col4 = st.columns([3, 1, 1, 1])
         with col1:
             inc_id = incident.get("id", "N/A")
             workload = incident.get("workload", "Unknown")
@@ -65,6 +65,10 @@ def render_incident_card(incident: dict[str, Any]) -> None:
             )
         with col3:
             st.caption(incident.get("created_at", ""))
+        with col4:
+            if st.button("View", key=f"view_{inc_id}"):
+                st.query_params["incident_id"] = inc_id
+                st.rerun()
 
 
 def render_approval_buttons(incident_id: str, action_name: str) -> str | None:
