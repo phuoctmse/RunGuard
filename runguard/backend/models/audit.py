@@ -11,6 +11,7 @@ class AuditEventType(StrEnum):
     """Types of audit events."""
 
     INCIDENT_CREATED = "incident_created"
+    WEBHOOK_RECEIVED = "webhook_received"
     PLAN_GENERATED = "plan_generated"
     ANALYSIS_FAILED = "analysis_failed"
     ACTION_VALIDATED = "action_validated"

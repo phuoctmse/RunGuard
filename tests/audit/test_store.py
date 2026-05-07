@@ -5,7 +5,7 @@ import os
 import tempfile
 import pytest
 from runguard.backend.audit.store import AuditStore
-from runguard.backend.models.audit import AuditRecord
+from runguard.backend.models.audit import AuditEventType, AuditRecord
 
 
 @pytest.fixture
@@ -51,3 +51,8 @@ def test_read_returns_chronological_order(audit_store):
 def test_read_nonexistent_returns_empty(audit_store):
     records = audit_store.read("inc-999")
     assert records == []
+
+
+def test_audit_event_webhook_received_exists():
+    """WEBHOOK_RECEIVED event type should exist."""
+    assert AuditEventType.WEBHOOK_RECEIVED == "webhook_received"
