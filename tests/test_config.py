@@ -1,9 +1,5 @@
 """Tests for configuration management."""
 
-import os
-import pytest
-from unittest.mock import patch
-
 
 def test_settings_defaults():
     """Settings should have correct default values."""
@@ -12,11 +8,16 @@ def test_settings_defaults():
     s = Settings()
     assert s.runguard_env == "local"
     assert s.log_level == "INFO"
+    assert s.api_url == "http://localhost:8000"
+    assert s.api_key == ""
+    assert s.webhook_secret == ""
     assert s.anthropic_api_key == ""
+    assert s.claude_model == "claude-sonnet-4-20250514"
     assert s.k8s_namespace == "runguard"
     assert s.audit_store_path == "./data/audit"
     assert s.llm_max_input_tokens == 10000
     assert s.llm_max_output_tokens == 2000
+    assert s.slack_webhook_url == ""
 
 
 def test_settings_from_env_vars(monkeypatch):
@@ -41,3 +42,30 @@ def test_settings_model_config():
     from runguard.backend.config import Settings
 
     assert Settings.model_config["env_prefix"] == "RUNGUARD_"
+
+
+def test_settings_claude_model_from_env(monkeypatch):
+    """Settings should load claude_model from env var."""
+    from runguard.backend.config import Settings
+
+    monkeypatch.setenv("RUNGUARD_CLAUDE_MODEL", "claude-opus-4-20250514")
+    s = Settings()
+    assert s.claude_model == "claude-opus-4-20250514"
+
+
+def test_settings_slack_webhook_from_env(monkeypatch):
+    """Settings should load slack_webhook_url from env var."""
+    from runguard.backend.config import Settings
+
+    monkeypatch.setenv("RUNGUARD_SLACK_WEBHOOK_URL", "https://hooks.slack.com/test")
+    s = Settings()
+    assert s.slack_webhook_url == "https://hooks.slack.com/test"
+
+
+def test_settings_webhook_secret_from_env(monkeypatch):
+    """Settings should load webhook_secret from env var."""
+    from runguard.backend.config import Settings
+
+    monkeypatch.setenv("RUNGUARD_WEBHOOK_SECRET", "my-bearer-token")
+    s = Settings()
+    assert s.webhook_secret == "my-bearer-token"

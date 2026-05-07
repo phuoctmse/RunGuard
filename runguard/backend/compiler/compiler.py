@@ -2,14 +2,32 @@
 
 import uuid
 
-from runguard.backend.models.policy import AllowedAction, ForbiddenAction, Policy
+from runguard.backend.models.policy import (
+    AllowedAction,
+    ForbiddenAction,
+    Policy,
+    PolicyScope,
+)
 from runguard.backend.models.runbook import Runbook
 
 # Map tool names to action identifiers
+# Accepts both space-separated (legacy) and underscore (spec) formats
 TOOL_TO_ACTION = {
+    # Spec format (underscore)
+    "rollout_restart": "rollout_restart",
+    "scale_replicas": "scale_replicas",
+    "update_image": "update_image",
+    "delete_pod": "delete_pod",
+    "fetch_logs": "fetch_logs",
+    "patch_config": "patch_config",
+    # Legacy format (space-separated) — backward compatibility
     "rollout restart": "rollout_restart",
     "scale deployment": "scale_deployment",
+    "scale replicas": "scale_replicas",
+    "update image": "update_image",
+    "delete pod": "delete_pod",
     "fetch logs": "fetch_logs",
+    "patch config": "patch_config",
     "run job": "run_job",
     "trigger ssm": "trigger_ssm",
 }
@@ -18,7 +36,11 @@ TOOL_TO_ACTION = {
 BLAST_RADIUS = {
     "rollout_restart": "low",
     "scale_deployment": "medium",
+    "scale_replicas": "medium",
+    "update_image": "medium",
+    "delete_pod": "high",
     "fetch_logs": "none",
+    "patch_config": "medium",
     "run_job": "medium",
     "trigger_ssm": "medium",
 }
@@ -55,10 +77,17 @@ def compile_runbook_to_policy(runbook: Runbook) -> Policy:
         for tool in runbook.forbidden_tools
     ]
 
+    scope = PolicyScope(
+        namespaces=runbook.scope.get("namespaces", []),
+        workloads=runbook.scope.get("workloads", []),
+    )
+
     return Policy(
         id=policy_id,
         runbook_id=runbook.id,
+        scope=scope,
         allowed_actions=allowed_actions,
         forbidden_actions=forbidden_actions,
+        severity=runbook.severity,
         max_blast_radius_threshold=0.3,
     )

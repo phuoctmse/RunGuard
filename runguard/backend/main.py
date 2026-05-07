@@ -2,8 +2,8 @@
 
 from fastapi import FastAPI
 
-from runguard.backend.api.audit import router as audit_router
 from runguard.backend.api import workflow as workflow_module
+from runguard.backend.api.audit import router as audit_router
 from runguard.backend.api.incidents import router as incidents_router
 from runguard.backend.api.runbooks import router as runbooks_router
 from runguard.backend.api.workflow import router as workflow_router

@@ -5,12 +5,12 @@
 - Workloads: *
 
 ## Allowed Tools
-- fetch logs
-- rollout restart
+- fetch_logs
+- rollout_restart
 
 ## Forbidden Tools
-- delete deployment
-- delete namespace
+- delete_pod
+- delete_deployment
 
 ## Severity
 high

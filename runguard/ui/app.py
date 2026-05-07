@@ -1,9 +1,8 @@
 """RunGuard Streamlit dashboard — main entry point."""
 
-import os
-
 import streamlit as st
 
+from runguard.backend.config import settings
 from runguard.ui.pages import (
     render_incident_detail_page,
     render_incident_list_page,
@@ -19,9 +18,7 @@ st.set_page_config(
 
 # Initialize session state defaults
 if "api_url" not in st.session_state:
-    st.session_state["api_url"] = os.environ.get(
-        "API_URL", "http://localhost:8000"
-    )
+    st.session_state["api_url"] = settings.api_url
 if "dry_run" not in st.session_state:
     st.session_state["dry_run"] = False
 

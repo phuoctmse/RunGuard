@@ -54,10 +54,12 @@ class IncidentPlanner:
     def __init__(
         self,
         api_key: str | None = None,
-        model: str = "claude-sonnet-4-20250514",
+        model: str | None = None,
     ):
+        from runguard.backend.config import settings
+
         self.client = anthropic.AsyncAnthropic(api_key=api_key)
-        self.model = model
+        self.model = model or settings.claude_model
 
     def _format_evidence(self, evidence: dict[str, Any]) -> str:
         """Format evidence dict into readable text for the prompt."""

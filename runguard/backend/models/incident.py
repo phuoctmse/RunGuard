@@ -18,12 +18,29 @@ class IncidentStatus(StrEnum):
     FAILED = "failed"
 
 
+class IncidentSeverity(StrEnum):
+    """Incident severity levels."""
+
+    LOW = "low"
+    MEDIUM = "medium"
+    HIGH = "high"
+    CRITICAL = "critical"
+
+
+class IncidentSource(StrEnum):
+    """Sources that can create incidents."""
+
+    PROMETHEUS = "prometheus"
+    CLOUDWATCH = "cloudwatch"
+    MANUAL = "manual"
+
+
 class Incident(BaseModel):
     """An incident record created from an alert or manual input."""
 
     id: str
     source: str  # prometheus, cloudwatch, manual
-    severity: str
+    severity: str  # low, medium, high, critical
     environment: str
     namespace: str
     workload: str

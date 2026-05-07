@@ -5,13 +5,13 @@
 - Workloads: web-app, api-server
 
 ## Allowed Tools
-- rollout restart
-- scale deployment
-- fetch logs
+- rollout_restart
+- scale_replicas
+- fetch_logs
 
 ## Forbidden Tools
-- delete deployment
-- delete namespace
+- delete_pod
+- delete_deployment
 
 ## Severity
 high
