@@ -12,6 +12,7 @@ class IncidentStatus(StrEnum):
     PENDING = "pending"
     ANALYZING = "analyzing"
     REQUIRES_APPROVAL = "requires_approval"
+    APPROVED = "approved"
     EXECUTING = "executing"
     RESOLVED = "resolved"
     REJECTED = "rejected"

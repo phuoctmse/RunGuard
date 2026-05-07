@@ -209,6 +209,27 @@ def test_incident_source_enum_values():
     assert IncidentSource.MANUAL == "manual"
 
 
+def test_incident_status_approved_exists():
+    """APPROVED status should be available in IncidentStatus."""
+    assert IncidentStatus.APPROVED == "approved"
+
+
+def test_incident_can_be_set_to_approved():
+    """Incident should accept approved status."""
+    incident = Incident(
+        id="inc-test",
+        source="manual",
+        severity="high",
+        environment="dev",
+        namespace="default",
+        workload="my-app",
+        raw_alert="test",
+        runbook_id="rb-test",
+        status=IncidentStatus.APPROVED,
+    )
+    assert incident.status == IncidentStatus.APPROVED
+
+
 # === AuditRecord ===
 
 def test_audit_record_defaults():
