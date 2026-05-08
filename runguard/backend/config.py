@@ -16,6 +16,7 @@ class Settings(BaseSettings):
 
     # Claude API
     anthropic_api_key: str = ""
+    anthropic_base_url: str = ""
     claude_model: str = "claude-sonnet-4-20250514"
 
     # Kubernetes
@@ -27,7 +28,7 @@ class Settings(BaseSettings):
 
     # LLM token budget
     llm_max_input_tokens: int = 10000
-    llm_max_output_tokens: int = 2000
+    llm_max_output_tokens: int = 8000
 
     # GitOps
     gitops_enabled: bool = False

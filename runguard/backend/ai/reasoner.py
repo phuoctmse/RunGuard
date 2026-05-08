@@ -2,6 +2,7 @@
 
 import json
 import logging
+import re
 from typing import Any
 
 import anthropic
@@ -12,6 +13,13 @@ from runguard.backend.config import settings
 logger = logging.getLogger(__name__)
 
 
+def _strip_markdown_fences(text: str) -> str:
+    """Strip markdown code fences from text to extract raw JSON."""
+    stripped = re.sub(r"^```(?:json)?\s*\n?", "", text.strip())
+    stripped = re.sub(r"\n?```\s*$", "", stripped)
+    return stripped.strip()
+
+
 class AIReasoner:
     """Analyzes incidents using Claude API to generate remediation plans."""
 
@@ -19,10 +27,15 @@ class AIReasoner:
         self,
         api_key: str | None = None,
         model: str | None = None,
+        base_url: str | None = None,
     ):
-        self.client = anthropic.AsyncAnthropic(
-            api_key=api_key or settings.anthropic_api_key,
-        )
+        kwargs: dict[str, Any] = {
+            "api_key": api_key or settings.anthropic_api_key,
+        }
+        url = base_url or settings.anthropic_base_url
+        if url:
+            kwargs["base_url"] = url
+        self.client = anthropic.AsyncAnthropic(**kwargs)
         self.model = model or settings.claude_model
 
     async def analyze(
@@ -59,6 +72,7 @@ class AIReasoner:
             )
             text_blocks = [b.text for b in response.content if hasattr(b, "text")]
             content = text_blocks[0] if text_blocks else ""
+            content = _strip_markdown_fences(content)
             result: dict[str, Any] = json.loads(content)
             return result
         except Exception as e:
