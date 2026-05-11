@@ -13,7 +13,7 @@ dependencies = [
     "httpx==0.27.2",
     "httpcore>=1.0.0",
     "streamlit>=1.30.0",
-    "boto3>=1.34.0",
+    "boto3>=1.43.6",
 ]
 
 [project.optional-dependencies]
