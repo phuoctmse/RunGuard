@@ -12,6 +12,7 @@ permissions:
 env:
   GO_VERSION: "1.24"
   PYTHON_VERSION: "3.14"
+  GO_MODULES: "services/api-gateway services/backend services/operator shared/types"
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -26,10 +27,10 @@ jobs:
       - uses: actions/setup-go@v5
         with:
           go-version: ${{ env.GO_VERSION }}
-      - name: golangci-lint
-        uses: golangci/golangci-lint-action@v6
-        with:
-          version: latest
+      - name: Install golangci-lint
+        run: go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
+      - name: Lint
+        run: for d in ${{ env.GO_MODULES }}; do (cd $d && golangci-lint run ./...) || exit 1; done
 
   go-test:
     name: Go Test
@@ -38,15 +39,9 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
         with:
-          go-version: ${{ env.GO_VERSION }}     
-      - name: Run Go tests
-        run: go test ./... -v -count=1 -coverprofile=coverage.out
-      - name: Upload coverage
-        uses: actions/upload-artifact@v4
-        with:
-          name: go-coverage
-          path: coverage.out
-          retention-days: 30
+          go-version: ${{ env.GO_VERSION }}
+      - name: Test
+        run: for d in ${{ env.GO_MODULES }}; do (cd $d && go test ./... -v -count=1) || exit 1; done
 
   python-lint:
     name: Python Lint
@@ -93,13 +88,6 @@ jobs:
             --cov-report=xml:coverage.xml \
             --cov-fail-under=80 \
             --junitxml=test-results.xml
-      - name: Upload test results
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: python-test-results
-          path: services/reasoner/test-results.xml
-          retention-days: 30
 
   security-check:
     name: Security Check
@@ -113,7 +101,7 @@ jobs:
       - name: Go vulnerability check
         run: |
           go install golang.org/x/vuln/cmd/govulncheck@latest
-          govulncheck ./...
+          for d in ${{ env.GO_MODULES }}; do (cd $d && govulncheck ./...) || exit 1; done
 
       - uses: actions/setup-python@v5
         with:
