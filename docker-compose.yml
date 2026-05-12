@@ -1,45 +1,41 @@
-name: RunGuard
-
 services:
-  backend:
-    build: .
-    ports:
-      - "8000:8000"
-    env_file:
-      - .env
+  postgres:
+    image: postgres:18-alpine3.23
     environment:
-      - PYTHONPATH=/app
-      - RUNGUARD_ENV=${RUNGUARD_ENV:-local}
-      - RUNGUARD_LOG_LEVEL=${RUNGUARD_LOG_LEVEL:-INFO}
-      - RUNGUARD_K8S_NAMESPACE=${RUNGUARD_K8S_NAMESPACE:-runguard}
+      POSTGRES_USER: runguard
+      POSTGRES_PASSWORD: runguard
+      POSTGRES_DB: runguard
+    ports:
+      - "5433:5432"
     volumes:
-      - ~/.kube:/root/.kube:ro
-      - audit-data:/app/data/audit
-    restart: unless-stopped
+      - postgres_data:/var/lib/postgresql
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
-      interval: 30s
+      test: ["CMD-SHELL", "pg_isready -U runguard"]
+      interval: 5s
       timeout: 5s
-      retries: 3
-      start_period: 10s
+      retries: 5
 
-  ui:
-    build: .
-    command: ["streamlit", "run", "runguard/ui/app.py", "--server.address", "0.0.0.0", "--server.port", "8501"]
+  redis:
+    image: redis:8-alpine3.23
     ports:
-      - "8501:8501"
-    environment:
-      - API_URL=http://backend:8000
-      - PYTHONPATH=/app
-    depends_on:
-      - backend
-    restart: unless-stopped
+      - "6379:6379"
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8501/_stcore/health"]
-      interval: 30s
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
       timeout: 5s
-      retries: 3
-      start_period: 10s
+      retries: 5
+
+  nats:
+    image: nats:2.14.0-alpine3.22
+    ports:
+      - "4222:4222"
+      - "8222:8222"
+    command: "--jetstream -m 8222"
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8222/healthz"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
 volumes:
-  audit-data:
+  postgres_data:
