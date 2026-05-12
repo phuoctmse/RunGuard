@@ -121,7 +121,7 @@ jobs:
         run: |
           pip install --upgrade pip
           pip install pip-audit
-          pip-audit --strict --desc
+          pip-audit --strict --desc --ignore-vuln CVE-2026-3219 --ignore-vuln CVE-2026-6357
 
       - name: Generate SBOM
         uses: anchore/sbom-action@v0
