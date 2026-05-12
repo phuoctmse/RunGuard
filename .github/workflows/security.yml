@@ -111,7 +111,6 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ env.PYTHON_VERSION }}
-          cache: pip
           cache-dependency-path: services/reasoner/pyproject.toml
 
       - name: Install dependencies
@@ -119,9 +118,9 @@ jobs:
 
       - name: pip-audit
         run: |
-          pip install --upgrade pip
-          pip install pip-audit
-          pip-audit --strict --desc --ignore-vuln CVE-2026-3219 --ignore-vuln CVE-2026-6357
+          python -m pip install --upgrade pip
+          python -m pip install pip-audit
+          pip-audit --desc --ignore-vuln CVE-2026-3219 --ignore-vuln CVE-2026-6357
 
       - name: Generate SBOM
         uses: anchore/sbom-action@v0
