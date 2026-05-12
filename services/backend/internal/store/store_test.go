@@ -36,8 +36,12 @@ func TestMemoryStoreCreateIncident(t *testing.T) {
 
 func TestMemoryStoreListIncidents(t *testing.T) {
 	s := NewMemoryStore()
-	s.CreateIncident(context.Background(), types.Incident{AlertName: "a", Phase: types.PhasePending})
-	s.CreateIncident(context.Background(), types.Incident{AlertName: "b", Phase: types.PhaseResolved})
+	if _, err := s.CreateIncident(context.Background(), types.Incident{AlertName: "a", Phase: types.PhasePending}); err != nil {
+		t.Fatalf("setup: %v", err)
+	}
+	if _, err := s.CreateIncident(context.Background(), types.Incident{AlertName: "b", Phase: types.PhaseResolved}); err != nil {
+		t.Fatalf("setup: %v", err)
+	}
 
 	all, err := s.ListIncidents(context.Background())
 	if err != nil {

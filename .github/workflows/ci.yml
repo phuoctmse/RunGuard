@@ -10,7 +10,7 @@ permissions:
   contents: read
 
 env:
-  GO_VERSION: "1.24"
+  GO_VERSION: "1.25"
   PYTHON_VERSION: "3.14"
   GO_MODULES: "services/api-gateway services/backend services/operator shared/types"
 

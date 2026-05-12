@@ -12,7 +12,7 @@ permissions:
   security-events: write
 
 env:
-  GO_VERSION: "1.24"
+  GO_VERSION: "1.25"
   PYTHON_VERSION: "3.14"
   GO_MODULES: "services/api-gateway services/backend services/operator shared/types"
 
@@ -32,6 +32,10 @@ jobs:
         if: matrix.language == 'go'
         with:
           go-version: ${{ env.GO_VERSION }}
+
+      - name: Set GOROOT for CodeQL
+        if: matrix.language == 'go'
+        run: echo "GOROOT=$(go env GOROOT)" >> $GITHUB_ENV
 
       - uses: actions/setup-python@v5
         if: matrix.language == 'python'
@@ -115,6 +119,7 @@ jobs:
 
       - name: pip-audit
         run: |
+          pip install --upgrade pip
           pip install pip-audit
           pip-audit --strict --desc
 
