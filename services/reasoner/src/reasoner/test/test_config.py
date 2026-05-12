@@ -1,5 +1,3 @@
-import os
-
 from reasoner.config import load_settings
 
 
