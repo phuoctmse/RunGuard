@@ -1,6 +1,6 @@
 module backend
 
-go 1.26.2
+go 1.24
 
 require github.com/phuoctmse/runguard/shared/types v0.0.0
 

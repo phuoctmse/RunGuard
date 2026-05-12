@@ -6,19 +6,55 @@ on:
       - "v*"
 
 permissions:
-  contents: write # Required for creating releases
-  id-token: write # Required for signing
+  contents: write
+  id-token: write
+
+env:
+  GO_VERSION: "1.24"
+  PYTHON_VERSION: "3.14"
 
 jobs:
-  build:
+  go-build:
+    name: Build Go Services
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        service: [api-gateway, backend, operator]
+        goos: [linux, darwin, windows]
+        goarch: [amd64, arm64]
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
 
+      - name: Build ${{ matrix.service }} (${{ matrix.goos }}/${{ matrix.goarch }})
+        env:
+          GOOS: ${{ matrix.goos }}
+          GOARCH: ${{ matrix.goarch }}
+          CGO_ENABLED: "0"
+        run: |
+          cd services/${{ matrix.service }}
+          go build -o ../../bin/${{ matrix.service }}-${{ matrix.goos }}-${{ matrix.goarch }} ./cmd/main.go
+
+      - name: Upload binary
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.service }}-${{ matrix.goos }}-${{ matrix.goarch }}
+          path: bin/${{ matrix.service }}-${{ matrix.goos }}-${{ matrix.goarch }}
+          retention-days: 30
+
+  python-build:
+    name: Build Python Package (reasoner)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: services/reasoner
+    steps:
+      - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
-          python-version: "3.11"
-          cache: pip
+          python-version: ${{ env.PYTHON_VERSION }}
 
       - name: Build package
         run: |
@@ -28,29 +64,32 @@ jobs:
       - name: Upload dist
         uses: actions/upload-artifact@v4
         with:
-          name: dist
-          path: dist/
+          name: reasoner-dist
+          path: services/reasoner/dist/
+          retention-days: 30
 
   release:
-    needs: build
+    needs: [go-build, python-build]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 0 # Full history for changelog
+          fetch-depth: 0
 
-      - name: Download dist
+      - name: Download all artifacts
         uses: actions/download-artifact@v4
         with:
-          name: dist
-          path: dist/
+          path: release-assets/
 
       - name: Generate changelog
         id: changelog
         run: |
-          # Auto-generate from conventional commits
           PREV_TAG=$(git tag --sort=-version:refname | sed -n '2p')
-          CHANGES=$(git log ${PREV_TAG}..HEAD --pretty=format:"- %s (%h)" --no-merges)
+          if [ -z "$PREV_TAG" ]; then
+            CHANGES=$(git log --pretty=format:"- %s (%h)" --no-merges -20)
+          else
+            CHANGES=$(git log ${PREV_TAG}..HEAD --pretty=format:"- %s (%h)" --no-merges)
+          fi
           echo "changes<<EOF" >> $GITHUB_OUTPUT
           echo "$CHANGES" >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
@@ -61,11 +100,20 @@ jobs:
           body: |
             ## Changes
             ${{ steps.changelog.outputs.changes }}
-          files: dist/*
+
+            ## Artifacts
+            ### Go Services (cross-platform)
+            - `api-gateway-{linux,darwin,windows}-{amd64,arm64}`
+            - `backend-{linux,darwin,windows}-{amd64,arm64}`
+            - `operator-{linux,darwin,windows}-{amd64,arm64}`
+
+            ### Python
+            - `reasoner` wheel and sdist
+          files: release-assets/**/*
           generate_release_notes: true
 
   notify-failure:
-    needs: [ build, release ]
+    needs: [go-build, python-build, release]
     if: failure()
     runs-on: ubuntu-latest
     steps:
@@ -77,13 +125,13 @@ jobs:
           webhook-type: incoming-webhook
           payload: |
             {
-              "text": "CI failed on ${{ github.ref_name }}",
+              "text": "Release failed on ${{ github.ref_name }}",
               "blocks": [
                 {
                   "type": "section",
                   "text": {
                     "type": "mrkdwn",
-                    "text": ":x: *CI Failed* on `${{ github.repository }}`\nBranch: `${{ github.ref_name }}`\nCommit: `${{ github.sha }}`\n<${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|View Run>"
+                    "text": ":x: *Release Failed* on `${{ github.repository }}`\nTag: `${{ github.ref_name }}`\n<${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|View Run>"
                   }
                 }
               ]

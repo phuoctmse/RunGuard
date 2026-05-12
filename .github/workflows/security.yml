@@ -4,29 +4,42 @@ on:
   schedule:
     - cron: "0 8 * * 1" # Every Monday 8am UTC
   pull_request:
-    branches: [ main ]
+    branches: [v2, main]
   workflow_dispatch:
 
 permissions:
   contents: read
-  security-events: write # Required for SARIF upload
+  security-events: write
+
+env:
+  GO_VERSION: "1.24"
+  PYTHON_VERSION: "3.14"
 
 jobs:
   codeql:
+    name: CodeQL (${{ matrix.language }})
     runs-on: ubuntu-latest
     timeout-minutes: 30
     strategy:
+      fail-fast: false
       matrix:
-        language: [ python ]
+        language: [go, python]
     steps:
       - uses: actions/checkout@v4
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-go@v5
+        if: matrix.language == 'go'
         with:
-          python-version: "3.11"
-          cache: pip
+          go-version: ${{ env.GO_VERSION }}
 
-      - name: Install dependencies
+      - uses: actions/setup-python@v5
+        if: matrix.language == 'python'
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install Python dependencies
+        if: matrix.language == 'python'
+        working-directory: services/reasoner
         run: pip install -e ".[dev]"
 
       - name: Initialize CodeQL
@@ -41,6 +54,7 @@ jobs:
           category: "/language:${{ matrix.language }}"
 
   semgrep:
+    name: Semgrep
     runs-on: ubuntu-latest
     container:
       image: semgrep/semgrep
@@ -59,42 +73,66 @@ jobs:
         with:
           sarif_file: semgrep.sarif
 
-  supply-chain:
+  go-supply-chain:
+    name: Go Supply Chain
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
 
+      - name: Go vulnerability check
+        run: |
+          go install golang.org/x/vuln/cmd/govulncheck@latest
+          govulncheck ./...
+
+      - name: Verify Go module checksums
+        run: |
+          go work sync
+          for dir in services/api-gateway services/backend services/operator shared/types; do
+            echo "Verifying $dir..."
+            cd $dir && go mod verify && cd ../..
+          done
+
+  python-supply-chain:
+    name: Python Supply Chain
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: services/reasoner
+    steps:
+      - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
-          python-version: "3.11"
+          python-version: ${{ env.PYTHON_VERSION }}
           cache: pip
-          cache-dependency-path: |
-            pyproject.toml
-            requirements*.txt
+          cache-dependency-path: services/reasoner/pyproject.toml
 
-      - name: Upgrade pip
-        run: pip install --upgrade pip
+      - name: Install dependencies
+        run: pip install -e ".[dev]"
 
-      - name: Verify dependencies (pip-audit)
+      - name: pip-audit
         run: |
           pip install pip-audit
-          pip-audit --desc
+          pip-audit --strict --desc
 
       - name: Generate SBOM
         uses: anchore/sbom-action@v0
         with:
           format: spdx-json
           output-file: sbom.spdx.json
+          path: services/reasoner
 
       - name: Upload SBOM
         uses: actions/upload-artifact@v4
         with:
-          name: sbom
+          name: python-sbom
           path: sbom.spdx.json
           retention-days: 90
 
   notify-failure:
-    needs: [ codeql, semgrep, supply-chain ]
+    needs: [codeql, semgrep, go-supply-chain, python-supply-chain]
     if: failure()
     runs-on: ubuntu-latest
     steps:
@@ -106,13 +144,13 @@ jobs:
           webhook-type: incoming-webhook
           payload: |
             {
-              "text": "CI failed on ${{ github.ref_name }}",
+              "text": "Security scan failed on ${{ github.ref_name }}",
               "blocks": [
                 {
                   "type": "section",
                   "text": {
                     "type": "mrkdwn",
-                    "text": ":x: *CI Failed* on `${{ github.repository }}`\nBranch: `${{ github.ref_name }}`\nCommit: `${{ github.sha }}`\n<${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|View Run>"
+                    "text": ":x: *Security Scan Failed* on `${{ github.repository }}`\nBranch: `${{ github.ref_name }}`\n<${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|View Run>"
                   }
                 }
               ]
