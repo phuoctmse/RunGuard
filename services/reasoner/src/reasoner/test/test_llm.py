@@ -4,6 +4,7 @@ import pytest
 
 from reasoner.llm import LLMClient
 
+
 @pytest.mark.asyncio
 async def test_analyze_incident_returns_structured_result():
     mock_response = MagicMock()
@@ -16,7 +17,10 @@ async def test_analyze_incident_returns_structured_result():
     client = LLMClient(api_key="test-key", model="claude-sonnet-4-20250514")
 
     with patch.object(
-        client.client.messages, "create", new_callable=AsyncMock, return_value=mock_response
+        client.client.messages,
+        "create",
+        new_callable=AsyncMock,
+        return_value=mock_response,
     ):
         result = await client.analyze_incident(
             alert_name="PodCrashLooping",
@@ -37,7 +41,10 @@ async def test_analyze_incident_handles_invalid_json():
     client = LLMClient(api_key="test-key", model="claude-sonnet-4-20250514")
 
     with patch.object(
-        client.client.messages, "create", new_callable=AsyncMock, return_value=mock_response
+        client.client.messages,
+        "create",
+        new_callable=AsyncMock,
+        return_value=mock_response,
     ):
         result = await client.analyze_incident(
             alert_name="TestAlert",
