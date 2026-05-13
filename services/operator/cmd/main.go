@@ -5,10 +5,11 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"operator/internal/config"
-	"operator/internal/controller"
-	"operator/internal/executor"
-	"operator/internal/webhook"
+
+	"github.com/phuoctmse/runguard/services/operator/internal/config"
+	"github.com/phuoctmse/runguard/services/operator/internal/controller"
+	"github.com/phuoctmse/runguard/services/operator/internal/executor"
+	"github.com/phuoctmse/runguard/services/operator/internal/webhook"
 
 	"github.com/phuoctmse/runguard/shared/types"
 )
