@@ -1,11 +1,12 @@
 package main
 
 import (
-	"backend/internal/config"
-	"backend/internal/handler"
 	"fmt"
 	"log"
 	"net/http"
+
+	"github.com/phuoctmse/runguard/services/backend/internal/config"
+	"github.com/phuoctmse/runguard/services/backend/internal/handler"
 )
 
 func main() {
@@ -13,7 +14,47 @@ func main() {
 	h := handler.New()
 
 	mux := http.NewServeMux()
-	mux.HandleFunc("/healthz", h.Health)
+
+	// Health
+	mux.HandleFunc("/healthz", h.Healthz)
+
+	// Incidents
+	mux.HandleFunc("/api/incidents", func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodGet:
+			h.ListIncidents(w, r)
+		case http.MethodPost:
+			h.CreateIncident(w, r)
+		default:
+			http.Error(w, `{"error":"method not allowed"}`, http.StatusMethodNotAllowed)
+		}
+	})
+
+	mux.HandleFunc("/api/incidents/", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == http.MethodGet {
+			h.GetIncident(w, r)
+		} else {
+			http.Error(w, `{"error":"method not allowed"}`, http.StatusMethodNotAllowed)
+		}
+	})
+
+	// Approval
+	mux.HandleFunc("/api/incidents/", func(w http.ResponseWriter, r *http.Request) {
+		// This is handled by the router above for GET
+		// For approve/reject, we need path-based routing
+	})
+
+	// Runbooks
+	mux.HandleFunc("/api/runbooks", func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodGet:
+			h.ListRunbooks(w, r)
+		case http.MethodPost:
+			h.CreateRunbook(w, r)
+		default:
+			http.Error(w, `{"error":"method not allowed"}`, http.StatusMethodNotAllowed)
+		}
+	})
 
 	addr := fmt.Sprintf(":%s", cfg.Port)
 	log.Printf("backend listening on %s", addr)

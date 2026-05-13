@@ -1,4 +1,4 @@
-module operator
+module github.com/phuoctmse/runguard/services/operator
 
 go 1.25
 
