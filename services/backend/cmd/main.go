@@ -13,7 +13,7 @@ func main() {
 	h := handler.New()
 
 	mux := http.NewServeMux()
-	mux.HandleFunc("/healthz", h.Health)
+	mux.HandleFunc("/healthz", h.Healthz)
 
 	addr := fmt.Sprintf(":%s", cfg.Port)
 	log.Printf("backend listening on %s", addr)
