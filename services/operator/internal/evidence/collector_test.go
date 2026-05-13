@@ -17,8 +17,8 @@ func TestCollectorCollectEvidence(t *testing.T) {
 	}
 
 	diagnosis := []types.DiagnosisStep{
-		{Name: "check_logs", Command: "echo 'fake logs'"},
-		{Name: "check_events", Command: "echo 'fake events'"},
+		{Name: "check_logs", Command: "echo fake logs"},
+		{Name: "check_events", Command: "echo fake events"},
 	}
 
 	evidence, err := collector.Collect(context.Background(), inc, diagnosis)

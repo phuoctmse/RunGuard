@@ -25,7 +25,7 @@ func (h *Handler) CreateIncident(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(map[string]string{"id": id})
+	_ = json.NewEncoder(w).Encode(map[string]string{"id": id})
 }
 
 // ListIncidents handles GET /api/incidents.
@@ -37,7 +37,7 @@ func (h *Handler) ListIncidents(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(incidents)
+	_ = json.NewEncoder(w).Encode(incidents)
 }
 
 // GetIncident handles GET /api/incidents/{id}.
@@ -55,5 +55,5 @@ func (h *Handler) GetIncident(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(inc)
+	_ = json.NewEncoder(w).Encode(inc)
 }
