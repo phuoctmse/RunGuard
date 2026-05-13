@@ -23,7 +23,7 @@ func (h *Handler) CreateRunbook(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(map[string]string{"id": id})
+	_ = json.NewEncoder(w).Encode(map[string]string{"id": id})
 }
 
 // ListRunbooks handles GET /api/runbooks.
@@ -35,5 +35,5 @@ func (h *Handler) ListRunbooks(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(runbooks)
+	_ = json.NewEncoder(w).Encode(runbooks)
 }
