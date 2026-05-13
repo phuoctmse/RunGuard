@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"context"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -11,7 +12,7 @@ import (
 
 func TestApproveIncident(t *testing.T) {
 	store := store.NewMemoryStore()
-	id, _ := store.CreateIncident(nil, types.Incident{
+	id, _ := store.CreateIncident(context.TODO(), types.Incident{
 		AlertName: "PodCrashLooping",
 		Phase:     types.PhaseRequiresApproval,
 	})
@@ -26,7 +27,7 @@ func TestApproveIncident(t *testing.T) {
 		t.Errorf("status = %d, want %d", w.Code, http.StatusOK)
 	}
 
-	inc, _ := store.GetIncident(nil, id)
+	inc, _ := store.GetIncident(context.TODO(), id)
 	if inc.Phase != types.PhaseExecuting {
 		t.Errorf("Phase = %q, want %q", inc.Phase, types.PhaseExecuting)
 	}
@@ -34,7 +35,7 @@ func TestApproveIncident(t *testing.T) {
 
 func TestRejectIncident(t *testing.T) {
 	store := store.NewMemoryStore()
-	id, _ := store.CreateIncident(nil, types.Incident{
+	id, _ := store.CreateIncident(context.TODO(), types.Incident{
 		AlertName: "PodCrashLooping",
 		Phase:     types.PhaseRequiresApproval,
 	})
@@ -49,7 +50,7 @@ func TestRejectIncident(t *testing.T) {
 		t.Errorf("status = %d, want %d", w.Code, http.StatusOK)
 	}
 
-	inc, _ := store.GetIncident(nil, id)
+	inc, _ := store.GetIncident(context.TODO(), id)
 	if inc.Phase != types.PhaseRejected {
 		t.Errorf("Phase = %q, want %q", inc.Phase, types.PhaseRejected)
 	}
@@ -57,7 +58,7 @@ func TestRejectIncident(t *testing.T) {
 
 func TestApproveIncidentWrongPhase(t *testing.T) {
 	store := store.NewMemoryStore()
-	id, _ := store.CreateIncident(nil, types.Incident{
+	id, _ := store.CreateIncident(context.TODO(), types.Incident{
 		Phase: types.PhasePending,
 	})
 

@@ -2,6 +2,7 @@ package handler
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
@@ -43,8 +44,8 @@ func TestListRunbooks(t *testing.T) {
 	h := NewWithStore(s)
 
 	// Create runbooks via handler
-	h.runbookStore.CreateRunbook(nil, types.Runbook{AlertName: "a"})
-	h.runbookStore.CreateRunbook(nil, types.Runbook{AlertName: "b"})
+	_, _ = h.runbookStore.CreateRunbook(context.TODO(), types.Runbook{AlertName: "a"})
+	_, _ = h.runbookStore.CreateRunbook(context.TODO(), types.Runbook{AlertName: "b"})
 
 	req := httptest.NewRequest(http.MethodGet, "/api/runbooks", nil)
 	w := httptest.NewRecorder()
@@ -56,7 +57,7 @@ func TestListRunbooks(t *testing.T) {
 	}
 
 	var resp []types.Runbook
-	json.NewDecoder(w.Body).Decode(&resp)
+	_ = json.NewDecoder(w.Body).Decode(&resp)
 	if len(resp) != 2 {
 		t.Errorf("count = %d, want 2", len(resp))
 	}

@@ -28,10 +28,13 @@ func (h *Handler) ApproveIncident(w http.ResponseWriter, r *http.Request) {
 	}
 
 	inc.Phase = types.PhaseExecuting
-	h.store.UpdateIncident(r.Context(), id, *inc)
+	if err := h.store.UpdateIncident(r.Context(), id, *inc); err != nil {
+		http.Error(w, `{"error":"failed to update incident"}`, http.StatusInternalServerError)
+		return
+	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]string{"status": "approved"})
+	_ = json.NewEncoder(w).Encode(map[string]string{"status": "approved"})
 }
 
 // RejectIncident handles POST /api/incidents/{id}/reject.
@@ -54,10 +57,13 @@ func (h *Handler) RejectIncident(w http.ResponseWriter, r *http.Request) {
 	}
 
 	inc.Phase = types.PhaseRejected
-	h.store.UpdateIncident(r.Context(), id, *inc)
+	if err := h.store.UpdateIncident(r.Context(), id, *inc); err != nil {
+		http.Error(w, `{"error":"failed to update incident"}`, http.StatusInternalServerError)
+		return
+	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]string{"status": "rejected"})
+	_ = json.NewEncoder(w).Encode(map[string]string{"status": "rejected"})
 }
 
 // extractID extracts the ID from a URL path.

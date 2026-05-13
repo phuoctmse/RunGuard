@@ -2,6 +2,7 @@ package handler
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
@@ -34,7 +35,7 @@ func TestCreateIncident(t *testing.T) {
 	}
 
 	var resp map[string]string
-	json.NewDecoder(w.Body).Decode(&resp)
+	_ = json.NewDecoder(w.Body).Decode(&resp)
 	if resp["id"] == "" {
 		t.Error("expected non-empty ID")
 	}
@@ -42,8 +43,8 @@ func TestCreateIncident(t *testing.T) {
 
 func TestListIncidents(t *testing.T) {
 	s := store.NewMemoryStore()
-	s.CreateIncident(nil, types.Incident{AlertName: "a", Phase: types.PhasePending})
-	s.CreateIncident(nil, types.Incident{AlertName: "b", Phase: types.PhaseResolved})
+	_, _ = s.CreateIncident(context.TODO(), types.Incident{AlertName: "a", Phase: types.PhasePending})
+	_, _ = s.CreateIncident(context.TODO(), types.Incident{AlertName: "b", Phase: types.PhaseResolved})
 
 	h := NewWithStore(s)
 	req := httptest.NewRequest(http.MethodGet, "/api/incidents", nil)
@@ -56,7 +57,7 @@ func TestListIncidents(t *testing.T) {
 	}
 
 	var resp []types.Incident
-	json.NewDecoder(w.Body).Decode(&resp)
+	_ = json.NewDecoder(w.Body).Decode(&resp)
 	if len(resp) != 2 {
 		t.Errorf("count = %d, want 2", len(resp))
 	}

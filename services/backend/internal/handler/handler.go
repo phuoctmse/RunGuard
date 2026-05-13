@@ -32,5 +32,5 @@ func NewWithStore(s *store.MemoryStore) *Handler {
 // Healthz returns 200 OK.
 func (h *Handler) Healthz(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]string{"status": "ok"})
+	_ = json.NewEncoder(w).Encode(map[string]string{"status": "ok"})
 }
