@@ -4,22 +4,29 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"backend/internal/store"
+	"github.com/phuoctmse/runguard/services/backend/internal/store"
 )
 
 // Handler handles HTTP requests for the backend API.
 type Handler struct {
-	store *store.MemoryStore
+	store        *store.MemoryStore
+	runbookStore *store.RunbookStore
 }
 
-// New creates a new Handler with a default store.
+// New creates a new Handler with default stores.
 func New() *Handler {
-	return &Handler{store: store.NewMemoryStore()}
+	return &Handler{
+		store:        store.NewMemoryStore(),
+		runbookStore: store.NewRunbookStore(),
+	}
 }
 
 // NewWithStore creates a new Handler with the given store.
 func NewWithStore(s *store.MemoryStore) *Handler {
-	return &Handler{store: s}
+	return &Handler{
+		store:        s,
+		runbookStore: store.NewRunbookStore(),
+	}
 }
 
 // Healthz returns 200 OK.

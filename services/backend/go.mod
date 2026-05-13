@@ -1,4 +1,4 @@
-module backend
+module github.com/phuoctmse/runguard/services/backend
 
 go 1.25
 

@@ -7,8 +7,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"backend/internal/store"
-
+	"github.com/phuoctmse/runguard/services/backend/internal/store"
 	"github.com/phuoctmse/runguard/shared/types"
 )
 

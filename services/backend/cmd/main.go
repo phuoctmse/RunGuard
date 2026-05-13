@@ -1,11 +1,12 @@
 package main
 
 import (
-	"backend/internal/config"
-	"backend/internal/handler"
 	"fmt"
 	"log"
 	"net/http"
+
+	"github.com/phuoctmse/runguard/services/backend/internal/config"
+	"github.com/phuoctmse/runguard/services/backend/internal/handler"
 )
 
 func main() {
