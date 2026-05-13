@@ -64,7 +64,7 @@ func main() {
 
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusCreated)
-		json.NewEncoder(w).Encode(map[string]string{"id": id, "status": "received"})
+		_ = json.NewEncoder(w).Encode(map[string]string{"id": id, "status": "received"})
 	})
 
 	addr := fmt.Sprintf(":%s", cfg.AlertmanagerWebhookPort)

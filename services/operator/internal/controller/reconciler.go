@@ -39,13 +39,13 @@ func (r *Reconciler) Reconcile(ctx context.Context, id string) error {
 	rb, matched := MatchRunbook(*inc, r.runbooks)
 	if !matched {
 		inc.Phase = types.PhaseFailed
-		r.store.Update(ctx, id, *inc)
+		_ = r.store.Update(ctx, id, *inc)
 		return fmt.Errorf("no matching runbook for alert %q", inc.AlertName)
 	}
 
 	// Step 2: Analyze
 	inc.Phase = types.PhaseAnalyzing
-	r.store.Update(ctx, id, *inc)
+	_ = r.store.Update(ctx, id, *inc)
 
 	// Step 3: Execute auto-approved remediation
 	for _, step := range rb.Remediation {
@@ -53,20 +53,20 @@ func (r *Reconciler) Reconcile(ctx context.Context, id string) error {
 			if r.executor != nil {
 				if err := r.executor.Execute(ctx, step, *inc); err != nil {
 					inc.Phase = types.PhaseFailed
-					r.store.Update(ctx, id, *inc)
+					_ = r.store.Update(ctx, id, *inc)
 					return fmt.Errorf("execute %q failed: %w", step.Name, err)
 				}
 			}
 		} else {
 			// Needs approval
 			inc.Phase = types.PhaseRequiresApproval
-			r.store.Update(ctx, id, *inc)
+			_ = r.store.Update(ctx, id, *inc)
 			return nil
 		}
 	}
 
 	// Step 4: Resolved
 	inc.Phase = types.PhaseResolved
-	r.store.Update(ctx, id, *inc)
+	_ = r.store.Update(ctx, id, *inc)
 	return nil
 }
