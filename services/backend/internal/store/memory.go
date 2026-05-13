@@ -53,3 +53,13 @@ func (s *MemoryStore) ListIncidents(ctx context.Context) ([]types.Incident, erro
 	}
 	return result, nil
 }
+
+func (s *MemoryStore) UpdateIncident(ctx context.Context, id string, inc types.Incident) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	if _, ok := s.incidents[id]; !ok {
+		return fmt.Errorf("incident %q not found", id)
+	}
+	s.incidents[id] = inc
+	return nil
+}
