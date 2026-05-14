@@ -7,61 +7,83 @@ import (
 	"github.com/phuoctmse/runguard/shared/types"
 )
 
-func TestReconcilerProcessIncident(t *testing.T) {
+func TestReconcilerWithPolicyEngine(t *testing.T) {
 	store := NewMemoryIncidentStore()
 	runbooks := []types.Runbook{
 		{
 			AlertName: "PodCrashLooping",
-			Severity:  []string{"critical", "warning"},
-			Diagnosis: []types.DiagnosisStep{
-				{Name: "check_logs", Command: "echo logs"},
-			},
+			Severity:  []string{"critical"},
 			Remediation: []types.RemediationStep{
-				{Name: "restart", Action: "restart", Target: "{{.PodName}}", Risk: "low", AutoApprove: true},
+				{Name: "restart", Action: "restart", Risk: "low", AutoApprove: true},
+			},
+			Rollback: []types.RemediationStep{
+				{Name: "undo", Action: "rollback"},
 			},
 		},
 	}
 
-	rec := NewReconciler(store, runbooks, nil)
+	policy := types.Policy{
+		Scope: types.Scope{
+			Namespace: []string{"production"},
+		},
+	}
+
+	exec := NewMockExecutor()
+	rec := NewReconcilerWithPolicy(store, runbooks, exec, policy)
 
 	inc := types.Incident{
 		AlertName: "PodCrashLooping",
 		Severity:  "critical",
 		Namespace: "production",
-		Workload:  "api-server-xyz",
+		Workload:  "api-server",
 		Phase:     types.PhasePending,
 	}
 
-	id, err := store.Create(context.Background(), inc)
-	if err != nil {
-		t.Fatalf("Create failed: %v", err)
-	}
-
-	err = rec.Reconcile(context.Background(), id)
+	id, _ := store.Create(context.Background(), inc)
+	err := rec.Reconcile(context.Background(), id)
 	if err != nil {
 		t.Fatalf("Reconcile failed: %v", err)
 	}
 
 	got, _ := store.Get(context.Background(), id)
-	if got.Phase != types.PhaseResolved {
-		t.Errorf("Phase = %q, want %q", got.Phase, types.PhaseResolved)
+	if got.Phase != types.PhaseRequiresApproval {
+		t.Errorf("Phase = %q, want %q", got.Phase, types.PhaseRequiresApproval)
 	}
 }
 
-func TestReconcilerNoMatchingRunbook(t *testing.T) {
+func TestReconcilerBlocksOutsideScope(t *testing.T) {
 	store := NewMemoryIncidentStore()
-	rec := NewReconciler(store, nil, nil)
+	runbooks := []types.Runbook{
+		{
+			AlertName: "PodCrashLooping",
+			Severity:  []string{"critical"},
+			Remediation: []types.RemediationStep{
+				{Name: "restart", Action: "restart", Risk: "low", AutoApprove: true},
+			},
+			Rollback: []types.RemediationStep{
+				{Name: "undo", Action: "rollback"},
+			},
+		},
+	}
+
+	policy := types.Policy{
+		Scope: types.Scope{Namespace: []string{"production"}},
+	}
+
+	exec := NewMockExecutor()
+	rec := NewReconcilerWithPolicy(store, runbooks, exec, policy)
 
 	inc := types.Incident{
-		AlertName: "UnknownAlert",
+		AlertName: "PodCrashLooping",
 		Severity:  "critical",
+		Namespace: "kube-system", // outside scope
 		Phase:     types.PhasePending,
 	}
 
 	id, _ := store.Create(context.Background(), inc)
 	err := rec.Reconcile(context.Background(), id)
 	if err == nil {
-		t.Error("expected error for no matching runbook")
+		t.Error("expected error for action outside scope")
 	}
 
 	got, _ := store.Get(context.Background(), id)

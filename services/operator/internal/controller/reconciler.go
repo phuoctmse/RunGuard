@@ -4,69 +4,105 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/phuoctmse/runguard/services/operator/internal/policy"
 	"github.com/phuoctmse/runguard/shared/types"
 )
 
 // Executor executes remediation actions.
 type Executor interface {
-	Execute(ctx context.Context, action types.RemediationStep, inc types.Incident) error
+	Execute(ctx context.Context, step types.RemediationStep, inc types.Incident) error
 }
 
-// Reconciler processes incidents through the lifecycle.
-type Reconciler struct {
-	store    *MemoryIncidentStore
-	runbooks []types.Runbook
-	executor Executor
+// ReconcilerWithPolicy extends Reconciler with policy validation.
+type ReconcilerWithPolicy struct {
+	store        *MemoryIncidentStore
+	runbooks     []types.Runbook
+	executor     Executor
+	policy       types.Policy
+	policyEngine *policy.Engine
 }
 
-// NewReconciler creates a new Reconciler.
-func NewReconciler(store *MemoryIncidentStore, runbooks []types.Runbook, executor Executor) *Reconciler {
-	return &Reconciler{
-		store:    store,
-		runbooks: runbooks,
-		executor: executor,
+func NewReconcilerWithPolicy(
+	store *MemoryIncidentStore,
+	runbooks []types.Runbook,
+	exec Executor,
+	pol types.Policy,
+) *ReconcilerWithPolicy {
+	return &ReconcilerWithPolicy{
+		store:        store,
+		runbooks:     runbooks,
+		executor:     exec,
+		policy:       pol,
+		policyEngine: policy.New(),
 	}
 }
 
-// Reconcile processes a single incident through the lifecycle.
-func (r *Reconciler) Reconcile(ctx context.Context, id string) error {
+func (r *ReconcilerWithPolicy) Reconcile(ctx context.Context, id string) error {
 	inc, err := r.store.Get(ctx, id)
 	if err != nil {
 		return err
 	}
 
-	// Step 1: Match runbook
-	rb, matched := MatchRunbook(*inc, r.runbooks)
-	if !matched {
+	// Match runbook
+	runbook := r.matchRunbook(inc.AlertName, inc.Severity)
+	if runbook == nil {
 		inc.Phase = types.PhaseFailed
-		_ = r.store.Update(ctx, id, *inc)
-		return fmt.Errorf("no matching runbook for alert %q", inc.AlertName)
+		r.store.Update(ctx, id, *inc)
+		return fmt.Errorf("no matching runbook")
 	}
 
-	// Step 2: Analyze
-	inc.Phase = types.PhaseAnalyzing
-	_ = r.store.Update(ctx, id, *inc)
+	// Validate with policy engine
+	results := r.policyEngine.ValidatePlan(
+		runbook.Remediation,
+		r.policy,
+		*runbook,
+		inc.Namespace,
+	)
 
-	// Step 3: Execute auto-approved remediation
-	for _, step := range rb.Remediation {
-		if step.AutoApprove && step.Risk == "low" {
-			if r.executor != nil {
-				if err := r.executor.Execute(ctx, step, *inc); err != nil {
-					inc.Phase = types.PhaseFailed
-					_ = r.store.Update(ctx, id, *inc)
-					return fmt.Errorf("execute %q failed: %w", step.Name, err)
-				}
-			}
-		} else {
-			// Needs approval
+	// Check for blocked actions
+	for _, result := range results {
+		if result.Classification == policy.Blocked {
+			inc.Phase = types.PhaseFailed
+			r.store.Update(ctx, id, *inc)
+			return fmt.Errorf("action %q blocked: %s", result.Action, result.Reason)
+		}
+	}
+
+	// Check if any action requires approval
+	for _, result := range results {
+		if result.Classification == policy.RequiresApproval {
 			inc.Phase = types.PhaseRequiresApproval
-			_ = r.store.Update(ctx, id, *inc)
+			r.store.Update(ctx, id, *inc)
 			return nil
 		}
 	}
 
-	// Step 4: Resolved
+	// All approved — execute
+	inc.Phase = types.PhaseExecuting
+	r.store.Update(ctx, id, *inc)
+
+	for _, step := range runbook.Remediation {
+		if err := r.executor.Execute(ctx, step, *inc); err != nil {
+			inc.Phase = types.PhaseFailed
+			r.store.Update(ctx, id, *inc)
+			return err
+		}
+	}
+
 	inc.Phase = types.PhaseResolved
-	_ = r.store.Update(ctx, id, *inc)
+	r.store.Update(ctx, id, *inc)
+	return nil
+}
+
+func (r *ReconcilerWithPolicy) matchRunbook(alertName, severity string) *types.Runbook {
+	for _, rb := range r.runbooks {
+		if rb.AlertName == alertName {
+			for _, s := range rb.Severity {
+				if s == severity {
+					return &rb
+				}
+			}
+		}
+	}
 	return nil
 }
