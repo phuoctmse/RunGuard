@@ -4,5 +4,6 @@ use (
 	services/api-gateway
 	services/backend
 	services/operator
+	services/worker
 	shared/types
 )
