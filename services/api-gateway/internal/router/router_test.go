@@ -22,7 +22,7 @@ func TestRouterProxyToBackend(t *testing.T) {
 	// Start a mock backend
 	backend := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(`{"source":"backend"}`))
+		_, _ = w.Write([]byte(`{"source":"backend"}`))
 	}))
 	defer backend.Close()
 

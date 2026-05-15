@@ -37,7 +37,7 @@ func (r *Router) setupRoutes() {
 	// Health
 	r.chi.Get("/healthz", func(w http.ResponseWriter, req *http.Request) {
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(`{"status":"ok"}`))
+		_, _ = w.Write([]byte(`{"status":"ok"}`))
 	})
 
 	// Proxy all /api/* to backend
