@@ -6,51 +6,59 @@ import anthropic
 
 logger = logging.getLogger(__name__)
 
-SYSTEM_PROMPT = """You are an SRE incident analyzer. Given an alert and evidence,
-identify the root cause and propose remediation actions.
+SYSTEM_PROMPT = """You are an SRE incident analysis assistant. Analyze the incident and return a JSON response with:
 
-Respond in JSON format:
 {
-  "root_cause": "brief description",
+  "root_cause": "string - the most likely root cause",
   "confidence": 0.0-1.0,
-  "evidence_citations": ["key evidence points"],
-  "actions": ["proposed remediation actions"]
-}"""
+  "evidence_citations": ["list of specific evidence supporting the conclusion"],
+  "actions": ["list of recommended remediation actions"]
+}
+
+Rules:
+- Only recommend actions that are safe and reversible
+- Cite specific evidence for each conclusion
+- Confidence below 0.5 means insufficient evidence
+- Never recommend destructive actions without explicit approval
+"""
 
 
 class LLMClient:
-    """Wrapper around Anthropic API for incident analysis."""
-
-    def __init__(self, api_key: str, model: str, max_tokens: int = 2048) -> None:
+    def __init__(self, api_key: str, model: str = "claude-sonnet-4-20250514") -> None:
         self.client = anthropic.AsyncAnthropic(api_key=api_key)
         self.model = model
-        self.max_tokens = max_tokens
 
     async def analyze_incident(
         self,
         alert_name: str,
         namespace: str,
-        evidence: dict[str, Any],
+        evidence: dict[str, str],
     ) -> dict[str, Any]:
-        """Analyze an incident using LLM and return structured result."""
-        user_message = (
-            f"Alert: {alert_name}\n"
-            f"Namespace: {namespace}\n"
-            f"Evidence:\n{json.dumps(evidence, indent=2)}"
-        )
+        evidence_text = "\n".join(f"## {k}\n{v}" for k, v in evidence.items())
+
+        user_message = f"""Incident: {alert_name}
+Namespace: {namespace}
+
+Evidence:
+{evidence_text}
+
+Analyze this incident and provide root cause, confidence, evidence citations, and recommended actions."""
 
         try:
             response = await self.client.messages.create(
                 model=self.model,
-                max_tokens=self.max_tokens,
+                max_tokens=2000,
                 system=SYSTEM_PROMPT,
                 messages=[{"role": "user", "content": user_message}],
             )
-            raw_text = response.content[0].text
-            return json.loads(raw_text)
+
+            text = response.content[0].text
+            return json.loads(text)
+
         except json.JSONDecodeError:
-            logger.warning("LLM returned invalid JSON: %s", raw_text[:200])
-            return {"error": "invalid_json", "raw": raw_text[:500]}
-        except Exception:
-            logger.exception("LLM call failed")
-            return {"error": "llm_call_failed"}
+            logger.warning("LLM returned invalid JSON")
+            return {"error": "invalid_json", "raw": text}
+
+        except Exception as e:
+            logger.error(f"LLM call failed: {e}")
+            return {"error": str(e)}
