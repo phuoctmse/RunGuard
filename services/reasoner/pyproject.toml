@@ -29,7 +29,7 @@ build-backend = "hatchling.build"
 packages = ["src/reasoner"]
 
 [tool.pytest.ini_options]
-testpaths = ["src/reasoner/test"]
+testpaths = ["tests"]
 asyncio_mode = "auto"
 
 [tool.ruff]
