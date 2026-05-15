@@ -67,8 +67,12 @@ func TestRunbookVersioningLatest(t *testing.T) {
 - Risk: low
 `)
 
-	store.Store("test-runbook", md)
-	store.Store("test-runbook", md)
+	if _, err := store.Store("test-runbook", md); err != nil {
+		t.Fatalf("Store failed: %v", err)
+	}
+	if _, err := store.Store("test-runbook", md); err != nil {
+		t.Fatalf("Store failed: %v", err)
+	}
 
 	latest, err := store.GetLatest("test-runbook")
 	if err != nil {

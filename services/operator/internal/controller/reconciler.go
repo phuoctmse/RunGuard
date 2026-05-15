@@ -47,7 +47,7 @@ func (r *ReconcilerWithPolicy) Reconcile(ctx context.Context, id string) error {
 	runbook := r.matchRunbook(inc.AlertName, inc.Severity)
 	if runbook == nil {
 		inc.Phase = types.PhaseFailed
-		r.store.Update(ctx, id, *inc)
+		_ = r.store.Update(ctx, id, *inc)
 		return fmt.Errorf("no matching runbook")
 	}
 
@@ -63,7 +63,7 @@ func (r *ReconcilerWithPolicy) Reconcile(ctx context.Context, id string) error {
 	for _, result := range results {
 		if result.Classification == policy.Blocked {
 			inc.Phase = types.PhaseFailed
-			r.store.Update(ctx, id, *inc)
+			_ = r.store.Update(ctx, id, *inc)
 			return fmt.Errorf("action %q blocked: %s", result.Action, result.Reason)
 		}
 	}
@@ -72,25 +72,25 @@ func (r *ReconcilerWithPolicy) Reconcile(ctx context.Context, id string) error {
 	for _, result := range results {
 		if result.Classification == policy.RequiresApproval {
 			inc.Phase = types.PhaseRequiresApproval
-			r.store.Update(ctx, id, *inc)
+			_ = r.store.Update(ctx, id, *inc)
 			return nil
 		}
 	}
 
 	// All approved — execute
 	inc.Phase = types.PhaseExecuting
-	r.store.Update(ctx, id, *inc)
+	_ = r.store.Update(ctx, id, *inc)
 
 	for _, step := range runbook.Remediation {
 		if err := r.executor.Execute(ctx, step, *inc); err != nil {
 			inc.Phase = types.PhaseFailed
-			r.store.Update(ctx, id, *inc)
+			_ = r.store.Update(ctx, id, *inc)
 			return err
 		}
 	}
 
 	inc.Phase = types.PhaseResolved
-	r.store.Update(ctx, id, *inc)
+	_ = r.store.Update(ctx, id, *inc)
 	return nil
 }
 
