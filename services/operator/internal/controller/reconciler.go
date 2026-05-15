@@ -93,7 +93,6 @@ func (r *ReconcilerWithPolicy) Reconcile(ctx context.Context, id string) error {
 	_ = r.store.Update(ctx, id, *inc)
 	return nil
 }
-<<<<<<< HEAD
 
 func (r *ReconcilerWithPolicy) matchRunbook(alertName, severity string) *types.Runbook {
 	for _, rb := range r.runbooks {
@@ -107,5 +106,3 @@ func (r *ReconcilerWithPolicy) matchRunbook(alertName, severity string) *types.R
 	}
 	return nil
 }
-=======
->>>>>>> fae3ab7439e294f06ad6a86cb22c976cc56fde3b
