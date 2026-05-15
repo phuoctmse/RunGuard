@@ -10,7 +10,6 @@ import (
 	"github.com/phuoctmse/runguard/services/operator/internal/controller"
 	"github.com/phuoctmse/runguard/services/operator/internal/executor"
 	"github.com/phuoctmse/runguard/services/operator/internal/webhook"
-
 	"github.com/phuoctmse/runguard/shared/types"
 )
 
@@ -32,7 +31,8 @@ func main() {
 		},
 	}
 	exec := executor.New()
-	reconciler := controller.NewReconciler(store, runbooks, exec)
+	policy := types.Policy{}
+	reconciler := controller.NewReconcilerWithPolicy(store, runbooks, exec, policy)
 
 	// HTTP handlers
 	mux := http.NewServeMux()
