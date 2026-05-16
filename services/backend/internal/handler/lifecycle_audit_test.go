@@ -36,7 +36,7 @@ func TestFullLifecycleAudit(t *testing.T) {
 		Phase:     types.PhasePending,
 	})
 
-	auditStore.Append(audit.Record{
+	_ = auditStore.Append(audit.Record{
 		IncidentID: id,
 		Type:       audit.RecordTypeIncidentCreated,
 		Timestamp:  time.Now(),
@@ -47,7 +47,7 @@ func TestFullLifecycleAudit(t *testing.T) {
 	})
 
 	// 2. Produce plan → audit: PlanProduced
-	auditStore.Append(audit.Record{
+	_ = auditStore.Append(audit.Record{
 		IncidentID: id,
 		Type:       audit.RecordTypePlanProduced,
 		Timestamp:  time.Now(),
@@ -60,7 +60,7 @@ func TestFullLifecycleAudit(t *testing.T) {
 	_ = handler.Approve(context.Background(), id, "user-1")
 
 	// 4. Execute → audit: ActionExecuted
-	auditStore.Append(audit.Record{
+	_ = auditStore.Append(audit.Record{
 		IncidentID: id,
 		Type:       audit.RecordTypeActionExecuted,
 		Timestamp:  time.Now(),
@@ -77,7 +77,7 @@ func TestFullLifecycleAudit(t *testing.T) {
 	auditHandler.GetAuditTrail(w, req)
 
 	var records []audit.Record
-	json.NewDecoder(w.Body).Decode(&records)
+	_ = json.NewDecoder(w.Body).Decode(&records)
 
 	if len(records) != 4 {
 		t.Errorf("audit count = %d, want 4", len(records))

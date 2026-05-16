@@ -71,7 +71,7 @@ func TestRollbackReverseOrder(t *testing.T) {
 
 	exec.SetFailAction("deploy")
 
-	exec.ExecuteWithRollback(context.Background(), actions, rollbackSteps, types.Incident{})
+	_ = exec.ExecuteWithRollback(context.Background(), actions, rollbackSteps, types.Incident{})
 
 	expected := []string{"undo_step3", "undo_step2", "undo_step1"}
 	if len(exec.RollbackLog) != len(expected) {

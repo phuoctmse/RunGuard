@@ -71,7 +71,7 @@ func TestAuditStoreChronological(t *testing.T) {
 func TestAuditStoreRollbackPath(t *testing.T) {
 	store := NewMemoryAuditStore()
 
-	store.Append(Record{
+	_ = store.Append(Record{
 		IncidentID: "inc-1",
 		Type:       RecordTypeActionExecuted,
 		Timestamp:  time.Now(),
@@ -90,9 +90,9 @@ func TestAuditStoreRollbackPath(t *testing.T) {
 func TestAuditStoreGetByType(t *testing.T) {
 	store := NewMemoryAuditStore()
 
-	store.Append(Record{IncidentID: "inc-1", Type: RecordTypeIncidentCreated, Timestamp: time.Now()})
-	store.Append(Record{IncidentID: "inc-1", Type: RecordTypeActionExecuted, Timestamp: time.Now()})
-	store.Append(Record{IncidentID: "inc-1", Type: RecordTypeActionExecuted, Timestamp: time.Now()})
+	_ = store.Append(Record{IncidentID: "inc-1", Type: RecordTypeIncidentCreated, Timestamp: time.Now()})
+	_ = store.Append(Record{IncidentID: "inc-1", Type: RecordTypeActionExecuted, Timestamp: time.Now()})
+	_ = store.Append(Record{IncidentID: "inc-1", Type: RecordTypeActionExecuted, Timestamp: time.Now()})
 
 	records, _ := store.GetByType("inc-1", RecordTypeActionExecuted)
 	if len(records) != 2 {
