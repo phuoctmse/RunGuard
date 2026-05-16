@@ -2,11 +2,12 @@ from unittest.mock import AsyncMock
 
 import httpx
 import pytest
+import pytest_asyncio
 
 from reasoner.main import app
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def client():
     transport = httpx.ASGITransport(app=app)
     async with httpx.AsyncClient(transport=transport, base_url="http://test") as ac:

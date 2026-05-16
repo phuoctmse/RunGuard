@@ -10,7 +10,9 @@ async def test_analyze_incident_returns_structured_result():
     mock_response = MagicMock()
     mock_response.content = [
         MagicMock(
-            text='{"root_cause": "OOMKill", "confidence": 0.92, "actions": ["increase_memory_limit"]}'
+            text='{"root_cause": "OOMKill", "confidence": 0.92, '
+            '"evidence_citations": ["OOMKilled in pod logs"], '
+            '"actions": ["increase_memory_limit"]}'
         )
     ]
 
@@ -30,7 +32,7 @@ async def test_analyze_incident_returns_structured_result():
 
     assert result["root_cause"] == "OOMKill"
     assert result["confidence"] == 0.92
-    assert "increase_memory_limit" in result["actions"]
+    assert "OOMKilled in pod logs" in result["evidence_citations"]
 
 
 @pytest.mark.asyncio
