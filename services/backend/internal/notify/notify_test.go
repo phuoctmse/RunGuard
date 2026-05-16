@@ -11,7 +11,7 @@ func TestSlackNotification(t *testing.T) {
 	var receivedBody string
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		buf := make([]byte, r.ContentLength)
-		r.Body.Read(buf)
+		_, _ = r.Body.Read(buf)
 		receivedBody = string(buf)
 		w.WriteHeader(http.StatusOK)
 	}))
@@ -30,7 +30,7 @@ func TestSlackNotification(t *testing.T) {
 
 	// Verify it's valid Slack payload
 	var payload SlackPayload
-	json.Unmarshal([]byte(receivedBody), &payload)
+	_ = json.Unmarshal([]byte(receivedBody), &payload)
 	if len(payload.Blocks) == 0 {
 		t.Error("Slack payload should have blocks")
 	}

@@ -41,7 +41,7 @@ func TestApprovalTimeoutCancelledOnApprove(t *testing.T) {
 	h.StartApprovalTimeout(id, 1*time.Second)
 
 	// Approve before timeout
-	h.Approve(context.Background(), id, "user-1")
+	_ = h.Approve(context.Background(), id, "user-1")
 
 	time.Sleep(1500 * time.Millisecond)
 

@@ -57,7 +57,7 @@ func TestFullLifecycleAudit(t *testing.T) {
 	})
 
 	// 3. Approve → audit: ActionApproved (handler.Approve() auto-appends)
-	handler.Approve(context.Background(), id, "user-1")
+	_ = handler.Approve(context.Background(), id, "user-1")
 
 	// 4. Execute → audit: ActionExecuted
 	auditStore.Append(audit.Record{

@@ -37,7 +37,7 @@ func (h *FullHandler) Approve(ctx context.Context, incidentID, approver string) 
 	}
 
 	// Write audit record
-	h.auditStore.Append(audit.Record{
+	_ = h.auditStore.Append(audit.Record{
 		IncidentID: incidentID,
 		Type:       audit.RecordTypeActionApproved,
 		Actor:      approver,
@@ -45,7 +45,7 @@ func (h *FullHandler) Approve(ctx context.Context, incidentID, approver string) 
 	})
 
 	// Send notification
-	h.notifier.NotifyApproved(incidentID, approver)
+	_ = h.notifier.NotifyApproved(incidentID, approver)
 
 	return nil
 }
@@ -56,7 +56,7 @@ func (h *FullHandler) Reject(ctx context.Context, incidentID, rejector, reason s
 		return err
 	}
 
-	h.auditStore.Append(audit.Record{
+	_ = h.auditStore.Append(audit.Record{
 		IncidentID: incidentID,
 		Type:       audit.RecordTypeActionRejected,
 		Actor:      rejector,
@@ -64,7 +64,7 @@ func (h *FullHandler) Reject(ctx context.Context, incidentID, rejector, reason s
 		Details:    map[string]string{"reason": reason},
 	})
 
-	h.notifier.NotifyRejected(incidentID, rejector, reason)
+	_ = h.notifier.NotifyRejected(incidentID, rejector, reason)
 
 	return nil
 }

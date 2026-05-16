@@ -124,7 +124,7 @@ func (h *ApprovalHandler) StartApprovalTimeout(incidentID string, timeout time.D
 		// Only expire if still in RequiresApproval
 		if inc.Phase == types.PhaseRequiresApproval {
 			inc.Phase = types.PhaseRejected
-			h.store.UpdateIncident(context.Background(), incidentID, *inc)
+			_ = h.store.UpdateIncident(context.Background(), incidentID, *inc)
 		}
 
 		h.mu.Lock()

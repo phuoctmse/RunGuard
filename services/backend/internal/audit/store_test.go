@@ -36,7 +36,7 @@ func TestAuditStoreRecordIncident(t *testing.T) {
 func TestAuditStoreImmutable(t *testing.T) {
 	store := NewMemoryAuditStore()
 
-	store.Append(Record{IncidentID: "inc-1", Type: RecordTypeIncidentCreated, Timestamp: time.Now()})
+	_ = store.Append(Record{IncidentID: "inc-1", Type: RecordTypeIncidentCreated, Timestamp: time.Now()})
 
 	// Attempt to delete → should fail
 	err := store.Delete("inc-1")
@@ -58,9 +58,9 @@ func TestAuditStoreChronological(t *testing.T) {
 	t2 := t1.Add(1 * time.Minute)
 	t3 := t1.Add(2 * time.Minute)
 
-	store.Append(Record{IncidentID: "inc-1", Type: RecordTypeActionExecuted, Timestamp: t3})
-	store.Append(Record{IncidentID: "inc-1", Type: RecordTypeIncidentCreated, Timestamp: t1})
-	store.Append(Record{IncidentID: "inc-1", Type: RecordTypePlanProduced, Timestamp: t2})
+	_ = store.Append(Record{IncidentID: "inc-1", Type: RecordTypeActionExecuted, Timestamp: t3})
+	_ = store.Append(Record{IncidentID: "inc-1", Type: RecordTypeIncidentCreated, Timestamp: t1})
+	_ = store.Append(Record{IncidentID: "inc-1", Type: RecordTypePlanProduced, Timestamp: t2})
 
 	records, _ := store.GetByIncident("inc-1")
 	if records[0].Timestamp.After(records[1].Timestamp) {
