@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/phuoctmse/runguard/services/backend/internal/audit"
 	"github.com/phuoctmse/runguard/services/backend/internal/config"
 	"github.com/phuoctmse/runguard/services/backend/internal/handler"
 )
@@ -12,6 +13,8 @@ import (
 func main() {
 	cfg := config.LoadConfig()
 	h := handler.New()
+	auditStore := audit.NewMemoryAuditStore()
+	auditHandler := handler.NewWithAuditStore(auditStore)
 
 	mux := http.NewServeMux()
 
@@ -56,9 +59,12 @@ func main() {
 		}
 	})
 
+	mux.HandleFunc("/api/audit/", auditHandler.GetAuditTrail)
+
 	addr := fmt.Sprintf(":%s", cfg.Port)
 	log.Printf("backend listening on %s", addr)
 	if err := http.ListenAndServe(addr, mux); err != nil {
 		log.Fatalf("server failed: %v", err)
 	}
+
 }
