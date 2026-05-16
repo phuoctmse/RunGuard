@@ -80,7 +80,7 @@ jobs:
         run: pip install -e ".[dev]"
       - name: Run tests with coverage
         run: |
-          pytest src/test/ \
+          pytest test/ \
             -v \
             --tb=short \
             --cov=reasoner \
