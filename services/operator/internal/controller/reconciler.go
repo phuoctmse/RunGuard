@@ -151,13 +151,13 @@ func (r *ReconcilerWithReasoner) Reconcile(ctx context.Context, id string) error
 	runbook := r.matchRunbook(inc.AlertName, inc.Severity)
 	if runbook == nil {
 		inc.Phase = types.PhaseFailed
-		r.store.Update(ctx, id, *inc)
+		_ = r.store.Update(ctx, id, *inc)
 		return fmt.Errorf("no matching runbook")
 	}
 
 	// Transition to Analyzing
 	inc.Phase = types.PhaseAnalyzing
-	r.store.Update(ctx, id, *inc)
+	_ = r.store.Update(ctx, id, *inc)
 
 	// Collect evidence (placeholder)
 	evidence := map[string]string{
@@ -176,18 +176,18 @@ func (r *ReconcilerWithReasoner) Reconcile(ctx context.Context, id string) error
 
 	// Execute remediation
 	inc.Phase = types.PhaseExecuting
-	r.store.Update(ctx, id, *inc)
+	_ = r.store.Update(ctx, id, *inc)
 
 	for _, step := range runbook.Remediation {
 		if err := r.executor.Execute(ctx, step, *inc); err != nil {
 			inc.Phase = types.PhaseFailed
-			r.store.Update(ctx, id, *inc)
+			_ = r.store.Update(ctx, id, *inc)
 			return err
 		}
 	}
 
 	inc.Phase = types.PhaseResolved
-	r.store.Update(ctx, id, *inc)
+	_ = r.store.Update(ctx, id, *inc)
 	return nil
 }
 

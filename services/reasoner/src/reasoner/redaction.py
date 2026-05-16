@@ -15,7 +15,12 @@ PATTERNS = [
     # Generic tokens in key=value
     (re.compile(r"(?i)token\s*[=:]\s*\S+"), "token=[REDACTED]"),
     # Private keys
-    (re.compile(r"-----BEGIN[A-Z ]*PRIVATE KEY-----[\s\S]*?-----END[A-Z ]*PRIVATE KEY-----"), "[REDACTED_PRIVATE_KEY]"),
+    (
+        re.compile(
+            r"-----BEGIN[A-Z ]*PRIVATE KEY-----[\s\S]*?-----END[A-Z ]*PRIVATE KEY-----"
+        ),
+        "[REDACTED_PRIVATE_KEY]",
+    ),
 ]
 
 

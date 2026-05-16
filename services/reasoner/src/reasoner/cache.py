@@ -6,10 +6,12 @@ from dataclasses import dataclass
 
 logger = logging.getLogger(__name__)
 
+
 @dataclass
 class CacheEntry:
     value: str
     created_at: float
+
 
 class PromptCache:
     def __init__(self, ttl_seconds: int = 3600):
@@ -42,4 +44,4 @@ class PromptCache:
         logger.debug(f"Cache set for {alert_type}")
 
     def clear(self) -> None:
-        self._cache.clear()  
+        self._cache.clear()

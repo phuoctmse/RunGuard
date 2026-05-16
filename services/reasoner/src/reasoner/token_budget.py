@@ -7,10 +7,12 @@ logger = logging.getLogger(__name__)
 INPUT_COST_PER_1M = 3.0
 OUTPUT_COST_PER_1M = 15.0
 
+
 @dataclass
 class UsageRecord:
     input_tokens: int = 0
     output_tokens: int = 0
+
 
 class TokenBudget:
     def __init__(self, max_input: int = 10000, max_output: int = 2000):

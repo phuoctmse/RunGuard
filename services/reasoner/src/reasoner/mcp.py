@@ -12,7 +12,11 @@ TOOL_DEFINITIONS = [
             "properties": {
                 "namespace": {"type": "string", "description": "Kubernetes namespace"},
                 "pod": {"type": "string", "description": "Pod name"},
-                "tail_lines": {"type": "integer", "description": "Number of lines to tail", "default": 100},
+                "tail_lines": {
+                    "type": "integer",
+                    "description": "Number of lines to tail",
+                    "default": 100,
+                },
             },
             "required": ["namespace", "pod"],
         },
