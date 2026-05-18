@@ -10,6 +10,7 @@ import (
 	"github.com/phuoctmse/runguard/services/operator/internal/controller"
 	"github.com/phuoctmse/runguard/services/operator/internal/executor"
 	"github.com/phuoctmse/runguard/services/operator/internal/webhook"
+	"github.com/phuoctmse/runguard/shared/server"
 	"github.com/phuoctmse/runguard/shared/types"
 )
 
@@ -68,8 +69,6 @@ func main() {
 	})
 
 	addr := fmt.Sprintf(":%s", cfg.AlertmanagerWebhookPort)
-	log.Printf("operator listening on %s", addr)
-	if err := http.ListenAndServe(addr, mux); err != nil {
-		log.Fatalf("server failed: %v", err)
-	}
+	srv := server.New(addr)
+	srv.ListenAndServe(mux)
 }

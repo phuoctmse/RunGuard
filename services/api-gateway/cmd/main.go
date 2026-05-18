@@ -6,9 +6,9 @@ import (
 	"api-gateway/internal/ratelimit"
 	"api-gateway/internal/router"
 	"fmt"
-	"log"
-	"net/http"
 	"os"
+
+	"github.com/phuoctmse/runguard/shared/server"
 )
 
 func main() {
@@ -33,8 +33,6 @@ func main() {
 	limited := rateLimiter.Limit(protected)
 
 	addr := fmt.Sprintf(":%s", cfg.Port)
-	log.Printf("api-gateway listening on %s", addr)
-	if err := http.ListenAndServe(addr, limited); err != nil {
-		log.Fatalf("server failed: %v", err)
-	}
+	srv := server.New(addr)
+	srv.ListenAndServe(limited)
 }

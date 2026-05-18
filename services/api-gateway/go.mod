@@ -4,6 +4,10 @@ go 1.25.0
 
 replace github.com/phuoctmse/runguard/shared/types => ../../shared/types
 
+replace github.com/phuoctmse/runguard/shared/server => ../../shared/server
+
+require github.com/phuoctmse/runguard/shared/server v0.0.0
+
 require (
 	github.com/go-chi/chi/v5 v5.2.5 // indirect
 	github.com/golang-jwt/jwt/v5 v5.3.1 // indirect
