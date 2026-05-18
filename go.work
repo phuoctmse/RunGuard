@@ -6,4 +6,6 @@ use (
 	services/operator
 	services/worker
 	shared/types
+	shared/middleware
+	shared/server
 )
