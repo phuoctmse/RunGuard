@@ -2,13 +2,14 @@ package server
 
 import (
 	"context"
+	"log/slog"
 	"net/http"
 	"testing"
 	"time"
 )
 
 func TestServerGracefulShutdown(t *testing.T) {
-	srv := New(":0")
+	srv := New(":0", slog.Default())
 
 	done := srv.ListenAndServeAsync(http.NewServeMux())
 

@@ -7,11 +7,13 @@ import (
 	"github.com/phuoctmse/runguard/services/backend/internal/audit"
 	"github.com/phuoctmse/runguard/services/backend/internal/config"
 	"github.com/phuoctmse/runguard/services/backend/internal/handler"
+	"github.com/phuoctmse/runguard/shared/logger"
 	"github.com/phuoctmse/runguard/shared/server"
 )
 
 func main() {
 	cfg := config.LoadConfig()
+	log := logger.New("backend")
 	h := handler.New()
 	auditStore := audit.NewMemoryAuditStore()
 	auditHandler := handler.NewWithAuditStore(auditStore)
@@ -41,12 +43,6 @@ func main() {
 		}
 	})
 
-	// Approval
-	mux.HandleFunc("/api/incidents/", func(w http.ResponseWriter, r *http.Request) {
-		// This is handled by the router above for GET
-		// For approve/reject, we need path-based routing
-	})
-
 	// Runbooks
 	mux.HandleFunc("/api/runbooks", func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
@@ -62,6 +58,6 @@ func main() {
 	mux.HandleFunc("/api/audit/", auditHandler.GetAuditTrail)
 
 	addr := fmt.Sprintf(":%s", cfg.Port)
-	srv := server.New(addr)
+	srv := server.New(addr, log)
 	srv.ListenAndServe(mux)
 }

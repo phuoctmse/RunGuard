@@ -2,7 +2,7 @@ package server
 
 import (
 	"context"
-	"log"
+	"log/slog"
 	"net/http"
 	"os/signal"
 	"syscall"
@@ -10,12 +10,13 @@ import (
 )
 
 type Server struct {
-	addr string
-	http *http.Server
+	addr   string
+	http   *http.Server
+	logger *slog.Logger
 }
 
-func New(addr string) *Server {
-	return &Server{addr: addr}
+func New(addr string, logger *slog.Logger) *Server {
+	return &Server{addr: addr, logger: logger}
 }
 
 func (s *Server) ListenAndServe(handler http.Handler) {
@@ -31,22 +32,22 @@ func (s *Server) ListenAndServe(handler http.Handler) {
 	defer stop()
 
 	go func() {
-		log.Printf("server listening on %s", s.addr)
+		s.logger.Info("server listening", "addr", s.addr)
 		if err := s.http.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			log.Fatalf("server failed: %v", err)
+			s.logger.Error("server failed", "error", err)
 		}
 	}()
 
 	<-ctx.Done()
-	log.Println("shutting down gracefully...")
+	s.logger.Info("shutting down gracefully...")
 
 	shutdownCtx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 
 	if err := s.http.Shutdown(shutdownCtx); err != nil {
-		log.Fatalf("shutdown failed: %v", err)
+		s.logger.Error("shutdown failed", "error", err)
 	}
-	log.Println("server stopped")
+	s.logger.Info("server stopped")
 }
 
 func (s *Server) ListenAndServeAsync(handler http.Handler) <-chan struct{} {
@@ -60,9 +61,9 @@ func (s *Server) ListenAndServeAsync(handler http.Handler) <-chan struct{} {
 
 	done := make(chan struct{})
 	go func() {
-		log.Printf("server listening on %s", s.addr)
+		s.logger.Info("server listening", "addr", s.addr)
 		if err := s.http.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			log.Fatalf("server failed: %v", err)
+			s.logger.Error("server failed", "error", err)
 		}
 		close(done)
 	}()

@@ -8,11 +8,13 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/phuoctmse/runguard/shared/logger"
 	"github.com/phuoctmse/runguard/shared/server"
 )
 
 func main() {
 	cfg := config.Load()
+	log := logger.New("api-gateway")
 
 	backendURL := os.Getenv("BACKEND_URL")
 	if backendURL == "" {
@@ -33,6 +35,6 @@ func main() {
 	limited := rateLimiter.Limit(protected)
 
 	addr := fmt.Sprintf(":%s", cfg.Port)
-	srv := server.New(addr)
+	srv := server.New(addr, log)
 	srv.ListenAndServe(limited)
 }

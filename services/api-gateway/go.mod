@@ -4,9 +4,14 @@ go 1.25.0
 
 replace github.com/phuoctmse/runguard/shared/types => ../../shared/types
 
+replace github.com/phuoctmse/runguard/shared/logger => ../../shared/logger
+
 replace github.com/phuoctmse/runguard/shared/server => ../../shared/server
 
-require github.com/phuoctmse/runguard/shared/server v0.0.0
+require (
+	github.com/phuoctmse/runguard/shared/logger v0.0.0
+	github.com/phuoctmse/runguard/shared/server v0.0.0
+)
 
 require (
 	github.com/go-chi/chi/v5 v5.2.5 // indirect
