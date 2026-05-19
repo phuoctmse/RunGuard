@@ -5,5 +5,9 @@ use (
 	services/backend
 	services/operator
 	services/worker
+	shared/logger
+	shared/middleware
+	shared/resilience
+	shared/server
 	shared/types
 )

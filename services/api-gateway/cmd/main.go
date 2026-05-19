@@ -6,13 +6,16 @@ import (
 	"api-gateway/internal/ratelimit"
 	"api-gateway/internal/router"
 	"fmt"
-	"log"
-	"net/http"
 	"os"
+
+	"github.com/phuoctmse/runguard/shared/logger"
+	"github.com/phuoctmse/runguard/shared/middleware"
+	"github.com/phuoctmse/runguard/shared/server"
 )
 
 func main() {
 	cfg := config.Load()
+	log := logger.New("api-gateway")
 
 	backendURL := os.Getenv("BACKEND_URL")
 	if backendURL == "" {
@@ -24,7 +27,8 @@ func main() {
 		jwtSecret = "dev-secret-change-in-production"
 	}
 
-	r := router.NewRouter(backendURL)
+	serviceToken := middleware.ServiceTokenFromEnv()
+	r := router.NewRouter(backendURL, serviceToken)
 	authMw := auth.NewMiddleware([]byte(jwtSecret))
 	rateLimiter := ratelimit.New(100, 200) // 100 req/s, burst 200
 
@@ -33,8 +37,6 @@ func main() {
 	limited := rateLimiter.Limit(protected)
 
 	addr := fmt.Sprintf(":%s", cfg.Port)
-	log.Printf("api-gateway listening on %s", addr)
-	if err := http.ListenAndServe(addr, limited); err != nil {
-		log.Fatalf("server failed: %v", err)
-	}
+	srv := server.New(addr, log)
+	srv.ListenAndServe(limited)
 }

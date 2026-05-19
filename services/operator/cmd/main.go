@@ -3,18 +3,20 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 	"net/http"
 
 	"github.com/phuoctmse/runguard/services/operator/internal/config"
 	"github.com/phuoctmse/runguard/services/operator/internal/controller"
 	"github.com/phuoctmse/runguard/services/operator/internal/executor"
 	"github.com/phuoctmse/runguard/services/operator/internal/webhook"
+	"github.com/phuoctmse/runguard/shared/logger"
+	"github.com/phuoctmse/runguard/shared/server"
 	"github.com/phuoctmse/runguard/shared/types"
 )
 
 func main() {
 	cfg := config.Load()
+	log := logger.New("operator")
 
 	// Initialize components
 	store := controller.NewMemoryIncidentStore()
@@ -58,7 +60,7 @@ func main() {
 		// Reconcile in background
 		go func() {
 			if err := reconciler.Reconcile(r.Context(), id); err != nil {
-				log.Printf("reconcile %s failed: %v", id, err)
+				log.Error("reconcile failed", "id", id, "error", err)
 			}
 		}()
 
@@ -68,8 +70,6 @@ func main() {
 	})
 
 	addr := fmt.Sprintf(":%s", cfg.AlertmanagerWebhookPort)
-	log.Printf("operator listening on %s", addr)
-	if err := http.ListenAndServe(addr, mux); err != nil {
-		log.Fatalf("server failed: %v", err)
-	}
+	srv := server.New(addr, log)
+	srv.ListenAndServe(mux)
 }

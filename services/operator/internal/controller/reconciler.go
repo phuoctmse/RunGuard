@@ -3,13 +3,11 @@ package controller
 import (
 	"context"
 	"fmt"
-	"log"
+	"log/slog"
 
 	"github.com/phuoctmse/runguard/services/operator/internal/policy"
 	"github.com/phuoctmse/runguard/shared/types"
 )
-
-var logger = log.Default()
 
 // Executor executes remediation actions.
 type Executor interface {
@@ -171,7 +169,7 @@ func (r *ReconcilerWithReasoner) Reconcile(ctx context.Context, id string) error
 	)
 
 	if reasonerErr != nil {
-		logger.Printf("Reasoner failed: %v, proceeding with rule-based", reasonerErr)
+		slog.Error("reasoner failed, proceeding with rule-based", "error", reasonerErr)
 	}
 
 	// Execute remediation
