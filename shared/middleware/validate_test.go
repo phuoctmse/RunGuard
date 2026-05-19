@@ -62,8 +62,10 @@ func TestValidateBodyMissingRequiredField(t *testing.T) {
 		t.Errorf("status = %d, want %d", w.Code, http.StatusBadRequest)
 	}
 
-	var resp map[string]interface{}
-	json.NewDecoder(w.Body).Decode(&resp)
+	var resp map[string]any
+	if err := json.NewDecoder(w.Body).Decode(&resp); err != nil {
+		t.Fatalf("failed to decode response: %v", err)
+	}
 	if resp["error"] == nil {
 		t.Error("response should contain error field")
 	}

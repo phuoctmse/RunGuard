@@ -15,7 +15,9 @@ func TestServerGracefulShutdown(t *testing.T) {
 
 	time.Sleep(100 * time.Millisecond)
 
-	srv.Shutdown(context.Background())
+	if err := srv.Shutdown(context.Background()); err != nil {
+		t.Fatalf("shutdown failed: %v", err)
+	}
 
 	select {
 	case <-done:
