@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"net/http/httputil"
 	"net/url"
+	"strings"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
@@ -40,12 +41,19 @@ func (r *Router) setupRoutes() {
 		_, _ = w.Write([]byte(`{"status":"ok"}`))
 	})
 
-	// Proxy all /api/* to backend
-	r.chi.Handle("/api/*", r.proxyHandler())
+	// Versioned API — proxy /v1/* to backend /api/*
+	r.chi.Route("/v1", func(v1 chi.Router) {
+		v1.Handle("/*", r.proxyHandler("/v1", "/api"))
+	})
 }
 
-func (r *Router) proxyHandler() http.Handler {
+func (r *Router) proxyHandler(stripPrefix, addPrefix string) http.Handler {
 	target, _ := url.Parse(r.backendURL)
-	proxy := httputil.NewSingleHostReverseProxy(target)
-	return proxy
+	return &httputil.ReverseProxy{
+		Rewrite: func(pr *httputil.ProxyRequest) {
+			pr.SetURL(target)
+			pr.Out.URL.Path = addPrefix + strings.TrimPrefix(pr.In.URL.Path, stripPrefix)
+			pr.Out.URL.RawPath = ""
+		},
+	}
 }

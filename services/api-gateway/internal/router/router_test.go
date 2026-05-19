@@ -18,11 +18,36 @@ func TestRouterHealthz(t *testing.T) {
 	}
 }
 
-func TestRouterProxyToBackend(t *testing.T) {
-	// Start a mock backend
+func TestRouterVersionedRoutes(t *testing.T) {
 	backend := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
-		_, _ = w.Write([]byte(`{"source":"backend"}`))
+	}))
+	defer backend.Close()
+
+	r := NewRouter(backend.URL)
+
+	tests := []struct {
+		path   string
+		expect int
+	}{
+		{"/v1/incidents", http.StatusOK},
+		{"/v1/runbooks", http.StatusOK},
+		{"/healthz", http.StatusOK},
+	}
+
+	for _, tt := range tests {
+		req := httptest.NewRequest(http.MethodGet, tt.path, nil)
+		w := httptest.NewRecorder()
+		r.ServeHTTP(w, req)
+		if w.Code != tt.expect {
+			t.Errorf("%s: status = %d, want %d", tt.path, w.Code, tt.expect)
+		}
+	}
+}
+
+func TestRouterOldApiPathReturns404(t *testing.T) {
+	backend := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
 	}))
 	defer backend.Close()
 
@@ -32,7 +57,7 @@ func TestRouterProxyToBackend(t *testing.T) {
 
 	r.ServeHTTP(w, req)
 
-	if w.Code != http.StatusOK {
-		t.Errorf("status = %d, want %d", w.Code, http.StatusOK)
+	if w.Code != http.StatusNotFound {
+		t.Errorf("/api/incidents: status = %d, want %d", w.Code, http.StatusNotFound)
 	}
 }
