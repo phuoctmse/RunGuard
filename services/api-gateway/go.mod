@@ -8,8 +8,11 @@ replace github.com/phuoctmse/runguard/shared/logger => ../../shared/logger
 
 replace github.com/phuoctmse/runguard/shared/server => ../../shared/server
 
+replace github.com/phuoctmse/runguard/shared/middleware => ../../shared/middleware
+
 require (
 	github.com/phuoctmse/runguard/shared/logger v0.0.0
+	github.com/phuoctmse/runguard/shared/middleware v0.0.0
 	github.com/phuoctmse/runguard/shared/server v0.0.0
 )
 

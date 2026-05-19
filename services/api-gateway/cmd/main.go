@@ -9,6 +9,7 @@ import (
 	"os"
 
 	"github.com/phuoctmse/runguard/shared/logger"
+	"github.com/phuoctmse/runguard/shared/middleware"
 	"github.com/phuoctmse/runguard/shared/server"
 )
 
@@ -26,7 +27,8 @@ func main() {
 		jwtSecret = "dev-secret-change-in-production"
 	}
 
-	r := router.NewRouter(backendURL)
+	serviceToken := middleware.ServiceTokenFromEnv()
+	r := router.NewRouter(backendURL, serviceToken)
 	authMw := auth.NewMiddleware([]byte(jwtSecret))
 	rateLimiter := ratelimit.New(100, 200) // 100 req/s, burst 200
 

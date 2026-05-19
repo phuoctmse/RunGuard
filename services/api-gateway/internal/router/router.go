@@ -12,15 +12,17 @@ import (
 
 // Router handles routing and proxying for the API gateway.
 type Router struct {
-	chi        *chi.Mux
-	backendURL string
+	chi           *chi.Mux
+	backendURL    string
+	serviceToken  string
 }
 
 // NewRouter creates a new Router that proxies to the given backend URL.
-func NewRouter(backendURL string) *Router {
+func NewRouter(backendURL string, serviceToken string) *Router {
 	r := &Router{
-		chi:        chi.NewRouter(),
-		backendURL: backendURL,
+		chi:          chi.NewRouter(),
+		backendURL:   backendURL,
+		serviceToken: serviceToken,
 	}
 	r.setupRoutes()
 	return r
@@ -54,6 +56,9 @@ func (r *Router) proxyHandler(stripPrefix, addPrefix string) http.Handler {
 			pr.SetURL(target)
 			pr.Out.URL.Path = addPrefix + strings.TrimPrefix(pr.In.URL.Path, stripPrefix)
 			pr.Out.URL.RawPath = ""
+			if r.serviceToken != "" {
+				pr.Out.Header.Set("X-Service-Token", r.serviceToken)
+			}
 		},
 	}
 }

@@ -7,7 +7,7 @@ import (
 )
 
 func TestRouterHealthz(t *testing.T) {
-	r := NewRouter("http://localhost:8081")
+	r := NewRouter("http://localhost:8081", "")
 	req := httptest.NewRequest(http.MethodGet, "/healthz", nil)
 	w := httptest.NewRecorder()
 
@@ -24,7 +24,7 @@ func TestRouterVersionedRoutes(t *testing.T) {
 	}))
 	defer backend.Close()
 
-	r := NewRouter(backend.URL)
+	r := NewRouter(backend.URL, "")
 
 	tests := []struct {
 		path   string
@@ -51,7 +51,7 @@ func TestRouterOldApiPathReturns404(t *testing.T) {
 	}))
 	defer backend.Close()
 
-	r := NewRouter(backend.URL)
+	r := NewRouter(backend.URL, "")
 	req := httptest.NewRequest(http.MethodGet, "/api/incidents", nil)
 	w := httptest.NewRecorder()
 
@@ -59,5 +59,24 @@ func TestRouterOldApiPathReturns404(t *testing.T) {
 
 	if w.Code != http.StatusNotFound {
 		t.Errorf("/api/incidents: status = %d, want %d", w.Code, http.StatusNotFound)
+	}
+}
+
+func TestRouterInjectsServiceToken(t *testing.T) {
+	var receivedToken string
+	backend := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		receivedToken = r.Header.Get("X-Service-Token")
+		w.WriteHeader(http.StatusOK)
+	}))
+	defer backend.Close()
+
+	r := NewRouter(backend.URL, "test-token-123")
+	req := httptest.NewRequest(http.MethodGet, "/v1/incidents", nil)
+	w := httptest.NewRecorder()
+
+	r.ServeHTTP(w, req)
+
+	if receivedToken != "test-token-123" {
+		t.Errorf("expected token %q, got %q", "test-token-123", receivedToken)
 	}
 }

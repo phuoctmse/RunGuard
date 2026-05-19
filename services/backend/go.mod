@@ -13,3 +13,5 @@ replace github.com/phuoctmse/runguard/shared/logger => ../../shared/logger
 replace github.com/phuoctmse/runguard/shared/types => ../../shared/types
 
 replace github.com/phuoctmse/runguard/shared/server => ../../shared/server
+
+replace github.com/phuoctmse/runguard/shared/middleware => ../../shared/middleware
