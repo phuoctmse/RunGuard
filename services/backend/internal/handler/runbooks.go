@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 
+	apperrors "github.com/phuoctmse/runguard/shared/errors"
 	"github.com/phuoctmse/runguard/shared/types"
 )
 
@@ -11,13 +12,13 @@ import (
 func (h *Handler) CreateRunbook(w http.ResponseWriter, r *http.Request) {
 	var rb types.Runbook
 	if err := json.NewDecoder(r.Body).Decode(&rb); err != nil {
-		http.Error(w, `{"error":"invalid JSON"}`, http.StatusBadRequest)
+		apperrors.WriteValidationError(w, "invalid JSON")
 		return
 	}
 
 	id, err := h.runbookStore.CreateRunbook(r.Context(), rb)
 	if err != nil {
-		http.Error(w, `{"error":"failed to create"}`, http.StatusInternalServerError)
+		apperrors.WriteInternalError(w)
 		return
 	}
 
@@ -30,7 +31,7 @@ func (h *Handler) CreateRunbook(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) ListRunbooks(w http.ResponseWriter, r *http.Request) {
 	runbooks, err := h.runbookStore.ListRunbooks(r.Context())
 	if err != nil {
-		http.Error(w, `{"error":"failed to list"}`, http.StatusInternalServerError)
+		apperrors.WriteInternalError(w)
 		return
 	}
 

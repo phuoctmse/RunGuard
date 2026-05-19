@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/golang-jwt/jwt/v5"
+	apperrors "github.com/phuoctmse/runguard/shared/errors"
 )
 
 type contextKey string
@@ -25,13 +26,13 @@ func (m *Middleware) Protect(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		authHeader := r.Header.Get("Authorization")
 		if authHeader == "" {
-			http.Error(w, `{"error":"missing authorization header"}`, http.StatusUnauthorized)
+			apperrors.WriteError(w, http.StatusUnauthorized, "missing authorization header", "UNAUTHORIZED")
 			return
 		}
 
 		parts := strings.SplitN(authHeader, " ", 2)
 		if len(parts) != 2 || parts[0] != "Bearer" {
-			http.Error(w, `{"error":"invalid authorization format"}`, http.StatusUnauthorized)
+			apperrors.WriteError(w, http.StatusUnauthorized, "invalid authorization format", "UNAUTHORIZED")
 			return
 		}
 
@@ -39,13 +40,13 @@ func (m *Middleware) Protect(next http.Handler) http.Handler {
 			return m.secret, nil
 		})
 		if err != nil || !token.Valid {
-			http.Error(w, `{"error":"invalid token"}`, http.StatusUnauthorized)
+			apperrors.WriteError(w, http.StatusUnauthorized, "invalid token", "UNAUTHORIZED")
 			return
 		}
 
 		claims, ok := token.Claims.(jwt.MapClaims)
 		if !ok {
-			http.Error(w, `{"error":"invalid claims"}`, http.StatusUnauthorized)
+			apperrors.WriteError(w, http.StatusUnauthorized, "invalid claims", "UNAUTHORIZED")
 			return
 		}
 

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -9,14 +10,29 @@ import (
 	"github.com/phuoctmse/runguard/services/operator/internal/controller"
 	"github.com/phuoctmse/runguard/services/operator/internal/executor"
 	"github.com/phuoctmse/runguard/services/operator/internal/webhook"
+	apperrors "github.com/phuoctmse/runguard/shared/errors"
+	"github.com/phuoctmse/runguard/shared/health"
 	"github.com/phuoctmse/runguard/shared/logger"
+	"github.com/phuoctmse/runguard/shared/metrics"
 	"github.com/phuoctmse/runguard/shared/server"
+	"github.com/phuoctmse/runguard/shared/tracing"
 	"github.com/phuoctmse/runguard/shared/types"
 )
 
 func main() {
 	cfg := config.Load()
 	log := logger.New("operator")
+
+	// Tracing
+	tp, err := tracing.InitTracer("operator")
+	if err != nil {
+		log.Error("failed to init tracer", "error", err)
+	} else {
+		defer func() { _ = tp.Shutdown(context.Background()) }()
+	}
+
+	// Metrics
+	metricsHandler := metrics.NewHandler("operator")
 
 	// Initialize components
 	store := controller.NewMemoryIncidentStore()
@@ -39,21 +55,25 @@ func main() {
 	// HTTP handlers
 	mux := http.NewServeMux()
 
-	mux.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusOK)
-		fmt.Fprint(w, `{"status":"ok"}`)
-	})
+	// Health — liveness + readiness
+	checker := health.New("operator")
+	checker.AddCheck("executor", func() error { return nil })
+	mux.HandleFunc("/healthz", checker.LiveHandler())
+	mux.HandleFunc("/readyz", checker.ReadyHandler())
+
+	// Metrics
+	mux.Handle("/metrics", metricsHandler.MetricsHandler())
 
 	mux.HandleFunc("/webhook/alertmanager", func(w http.ResponseWriter, r *http.Request) {
 		inc, err := webhook.ParseWebhook(r)
 		if err != nil {
-			http.Error(w, fmt.Sprintf(`{"error":"%s"}`, err), http.StatusBadRequest)
+			apperrors.WriteValidationError(w, err.Error())
 			return
 		}
 
 		id, err := store.Create(r.Context(), *inc)
 		if err != nil {
-			http.Error(w, `{"error":"failed to create incident"}`, http.StatusInternalServerError)
+			apperrors.WriteInternalError(w)
 			return
 		}
 
@@ -69,7 +89,10 @@ func main() {
 		_ = json.NewEncoder(w).Encode(map[string]string{"id": id, "status": "received"})
 	})
 
+	// Wrap with tracing + metrics middleware
+	traced := tracing.Middleware("operator")(metricsHandler.Middleware(mux))
+
 	addr := fmt.Sprintf(":%s", cfg.AlertmanagerWebhookPort)
 	srv := server.New(addr, log)
-	srv.ListenAndServe(mux)
+	srv.ListenAndServe(traced)
 }
