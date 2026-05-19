@@ -13,9 +13,9 @@ import (
 
 // Router handles routing and proxying for the API gateway.
 type Router struct {
-	chi           *chi.Mux
-	backendURL    string
-	serviceToken  string
+	chi          *chi.Mux
+	backendURL   string
+	serviceToken string
 }
 
 // NewRouter creates a new Router that proxies to the given backend URL.
