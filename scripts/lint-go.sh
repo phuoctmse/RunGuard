@@ -5,7 +5,7 @@
 
 set -e
 
-GO_MODULES="services/api-gateway services/backend services/operator shared/types shared/middleware shared/server shared/logger shared/resilience"
+GO_MODULES="services/api-gateway services/backend services/operator shared/types shared/middleware shared/server shared/logger shared/resilience shared/tracing"
 
 RED='\033[0;31m'
 GREEN='\033[0;32m'

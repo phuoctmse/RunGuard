@@ -10,4 +10,5 @@ use (
 	shared/resilience
 	shared/server
 	shared/types
+	shared/tracing
 )
