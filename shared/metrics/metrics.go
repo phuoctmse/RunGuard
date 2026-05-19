@@ -53,14 +53,26 @@ func (h *Handler) RecordRequest(method, path string, status int) {
 	h.requestsTotal.WithLabelValues(method, path, strconv.Itoa(status)).Inc()
 }
 
+// statusRecorder wraps ResponseWriter to capture the status code.
+type statusRecorder struct {
+	http.ResponseWriter
+	status int
+}
+
+func (sr *statusRecorder) WriteHeader(code int) {
+	sr.status = code
+	sr.ResponseWriter.WriteHeader(code)
+}
+
 // Middleware returns HTTP middleware that records metrics.
 func (h *Handler) Middleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		start := time.Now()
-		next.ServeHTTP(w, r)
+		sr := &statusRecorder{ResponseWriter: w, status: http.StatusOK}
+		next.ServeHTTP(sr, r)
 		duration := time.Since(start).Seconds()
 
-		h.requestsTotal.WithLabelValues(r.Method, r.URL.Path, "200").Inc()
+		h.requestsTotal.WithLabelValues(r.Method, r.URL.Path, strconv.Itoa(sr.status)).Inc()
 		h.requestDuration.WithLabelValues(r.Method, r.URL.Path).Observe(duration)
 	})
 }

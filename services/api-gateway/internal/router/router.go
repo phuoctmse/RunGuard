@@ -8,6 +8,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	"github.com/phuoctmse/runguard/shared/health"
 )
 
 // Router handles routing and proxying for the API gateway.
@@ -37,11 +38,10 @@ func (r *Router) setupRoutes() {
 	r.chi.Use(middleware.Logger)
 	r.chi.Use(middleware.Recoverer)
 
-	// Health
-	r.chi.Get("/healthz", func(w http.ResponseWriter, req *http.Request) {
-		w.WriteHeader(http.StatusOK)
-		_, _ = w.Write([]byte(`{"status":"ok"}`))
-	})
+	// Health — liveness + readiness
+	checker := health.New("api-gateway")
+	r.chi.Get("/healthz", checker.LiveHandler())
+	r.chi.Get("/readyz", checker.ReadyHandler())
 
 	// Versioned API — proxy /v1/* to backend /api/*
 	r.chi.Route("/v1", func(v1 chi.Router) {

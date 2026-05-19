@@ -13,3 +13,8 @@ func NewStore() *Store {
 		RunbookStore: NewRunbookStore(),
 	}
 }
+
+// HealthCheck returns nil for in-memory store (always available).
+func (s *Store) HealthCheck() error {
+	return nil
+}
