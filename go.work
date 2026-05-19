@@ -11,4 +11,5 @@ use (
 	shared/server
 	shared/types
 	shared/tracing
+	shared/metrics
 )
