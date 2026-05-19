@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"sync"
 
+	apperrors "github.com/phuoctmse/runguard/shared/errors"
 	"golang.org/x/time/rate"
 )
 
@@ -46,7 +47,7 @@ func (l *Limiter) Limit(next http.Handler) http.Handler {
 		limiter := l.getLimiter(ip)
 
 		if !limiter.Allow() {
-			http.Error(w, `{"error":"rate limit exceeded"}`, http.StatusTooManyRequests)
+			apperrors.WriteError(w, http.StatusTooManyRequests, "rate limit exceeded", "RATE_LIMITED")
 			return
 		}
 

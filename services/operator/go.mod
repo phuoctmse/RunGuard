@@ -3,6 +3,7 @@ module github.com/phuoctmse/runguard/services/operator
 go 1.25.0
 
 require (
+	github.com/phuoctmse/runguard/shared/errors v0.0.0
 	github.com/phuoctmse/runguard/shared/health v0.0.0
 	github.com/phuoctmse/runguard/shared/logger v0.0.0
 	github.com/phuoctmse/runguard/shared/metrics v0.0.0
@@ -41,6 +42,8 @@ require (
 	google.golang.org/grpc v1.80.0 // indirect
 	google.golang.org/protobuf v1.36.11 // indirect
 )
+
+replace github.com/phuoctmse/runguard/shared/errors => ../../shared/errors
 
 replace github.com/phuoctmse/runguard/shared/health => ../../shared/health
 

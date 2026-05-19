@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/phuoctmse/runguard/services/backend/internal/store"
+	apperrors "github.com/phuoctmse/runguard/shared/errors"
 	"github.com/phuoctmse/runguard/shared/types"
 )
 
@@ -31,24 +32,24 @@ func NewApprovalHandler(s *store.MemoryStore) *ApprovalHandler {
 func (h *Handler) ApproveIncident(w http.ResponseWriter, r *http.Request) {
 	id := extractID(r.URL.Path, "/api/incidents/", "/approve")
 	if id == "" {
-		http.Error(w, `{"error":"missing id"}`, http.StatusBadRequest)
+		apperrors.WriteError(w, http.StatusBadRequest, "missing id", "MISSING_ID")
 		return
 	}
 
 	inc, err := h.store.GetIncident(r.Context(), id)
 	if err != nil {
-		http.Error(w, `{"error":"not found"}`, http.StatusNotFound)
+		apperrors.WriteNotFound(w, "incident")
 		return
 	}
 
 	if inc.Phase != types.PhaseRequiresApproval {
-		http.Error(w, `{"error":"incident not in RequiresApproval phase"}`, http.StatusConflict)
+		apperrors.WriteError(w, http.StatusConflict, "incident not in RequiresApproval phase", "INVALID_PHASE")
 		return
 	}
 
 	inc.Phase = types.PhaseExecuting
 	if err := h.store.UpdateIncident(r.Context(), id, *inc); err != nil {
-		http.Error(w, `{"error":"failed to update incident"}`, http.StatusInternalServerError)
+		apperrors.WriteInternalError(w)
 		return
 	}
 
@@ -60,24 +61,24 @@ func (h *Handler) ApproveIncident(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) RejectIncident(w http.ResponseWriter, r *http.Request) {
 	id := extractID(r.URL.Path, "/api/incidents/", "/reject")
 	if id == "" {
-		http.Error(w, `{"error":"missing id"}`, http.StatusBadRequest)
+		apperrors.WriteError(w, http.StatusBadRequest, "missing id", "MISSING_ID")
 		return
 	}
 
 	inc, err := h.store.GetIncident(r.Context(), id)
 	if err != nil {
-		http.Error(w, `{"error":"not found"}`, http.StatusNotFound)
+		apperrors.WriteNotFound(w, "incident")
 		return
 	}
 
 	if inc.Phase != types.PhaseRequiresApproval {
-		http.Error(w, `{"error":"incident not in RequiresApproval phase"}`, http.StatusConflict)
+		apperrors.WriteError(w, http.StatusConflict, "incident not in RequiresApproval phase", "INVALID_PHASE")
 		return
 	}
 
 	inc.Phase = types.PhaseRejected
 	if err := h.store.UpdateIncident(r.Context(), id, *inc); err != nil {
-		http.Error(w, `{"error":"failed to update incident"}`, http.StatusInternalServerError)
+		apperrors.WriteInternalError(w)
 		return
 	}
 

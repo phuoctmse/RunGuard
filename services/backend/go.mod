@@ -3,6 +3,7 @@ module github.com/phuoctmse/runguard/services/backend
 go 1.25.0
 
 require (
+	github.com/phuoctmse/runguard/shared/errors v0.0.0
 	github.com/phuoctmse/runguard/shared/health v0.0.0
 	github.com/phuoctmse/runguard/shared/logger v0.0.0
 	github.com/phuoctmse/runguard/shared/metrics v0.0.0
@@ -56,6 +57,8 @@ replace github.com/phuoctmse/runguard/shared/types => ../../shared/types
 replace github.com/phuoctmse/runguard/shared/server => ../../shared/server
 
 replace github.com/phuoctmse/runguard/shared/middleware => ../../shared/middleware
+
+replace github.com/phuoctmse/runguard/shared/errors => ../../shared/errors
 
 replace github.com/phuoctmse/runguard/shared/health => ../../shared/health
 

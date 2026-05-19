@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/phuoctmse/runguard/services/backend/internal/audit"
+	apperrors "github.com/phuoctmse/runguard/shared/errors"
 )
 
 type AuditHandler struct {
@@ -20,14 +21,14 @@ func NewWithAuditStore(store *audit.MemoryAuditStore) *AuditHandler {
 func (h *AuditHandler) GetAuditTrail(w http.ResponseWriter, r *http.Request) {
 	parts := strings.Split(r.URL.Path, "/")
 	if len(parts) < 4 || parts[3] == "" {
-		http.Error(w, `{"error":"missing incident id"}`, http.StatusBadRequest)
+		apperrors.WriteError(w, http.StatusBadRequest, "missing incident id", "MISSING_ID")
 		return
 	}
 	incidentID := parts[3]
 
 	records, err := h.store.GetByIncident(incidentID)
 	if err != nil {
-		http.Error(w, `{"error":"`+err.Error()+`"}`, http.StatusInternalServerError)
+		apperrors.WriteInternalError(w)
 		return
 	}
 

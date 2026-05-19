@@ -10,6 +10,8 @@ replace github.com/phuoctmse/runguard/shared/server => ../../shared/server
 
 replace github.com/phuoctmse/runguard/shared/middleware => ../../shared/middleware
 
+replace github.com/phuoctmse/runguard/shared/errors => ../../shared/errors
+
 replace github.com/phuoctmse/runguard/shared/health => ../../shared/health
 
 replace github.com/phuoctmse/runguard/shared/tracing => ../../shared/tracing
@@ -19,6 +21,7 @@ replace github.com/phuoctmse/runguard/shared/metrics => ../../shared/metrics
 require (
 	github.com/go-chi/chi/v5 v5.2.5
 	github.com/golang-jwt/jwt/v5 v5.3.1
+	github.com/phuoctmse/runguard/shared/errors v0.0.0
 	github.com/phuoctmse/runguard/shared/health v0.0.0
 	github.com/phuoctmse/runguard/shared/logger v0.0.0
 	github.com/phuoctmse/runguard/shared/metrics v0.0.0

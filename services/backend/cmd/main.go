@@ -10,6 +10,7 @@ import (
 	"github.com/phuoctmse/runguard/services/backend/internal/config"
 	"github.com/phuoctmse/runguard/services/backend/internal/handler"
 	"github.com/phuoctmse/runguard/services/backend/internal/store"
+	apperrors "github.com/phuoctmse/runguard/shared/errors"
 	"github.com/phuoctmse/runguard/shared/health"
 	"github.com/phuoctmse/runguard/shared/logger"
 	"github.com/phuoctmse/runguard/shared/metrics"
@@ -57,7 +58,7 @@ func main() {
 		case http.MethodPost:
 			h.CreateIncident(w, r)
 		default:
-			http.Error(w, `{"error":"method not allowed"}`, http.StatusMethodNotAllowed)
+			apperrors.WriteError(w, http.StatusMethodNotAllowed, "method not allowed", "METHOD_NOT_ALLOWED")
 		}
 	})
 
@@ -65,7 +66,7 @@ func main() {
 		if r.Method == http.MethodGet {
 			h.GetIncident(w, r)
 		} else {
-			http.Error(w, `{"error":"method not allowed"}`, http.StatusMethodNotAllowed)
+			apperrors.WriteError(w, http.StatusMethodNotAllowed, "method not allowed", "METHOD_NOT_ALLOWED")
 		}
 	})
 
@@ -77,7 +78,7 @@ func main() {
 		case http.MethodPost:
 			h.CreateRunbook(w, r)
 		default:
-			http.Error(w, `{"error":"method not allowed"}`, http.StatusMethodNotAllowed)
+			apperrors.WriteError(w, http.StatusMethodNotAllowed, "method not allowed", "METHOD_NOT_ALLOWED")
 		}
 	})
 
