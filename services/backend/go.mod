@@ -12,6 +12,7 @@ require (
 	github.com/phuoctmse/runguard/shared/server v0.0.0
 	github.com/phuoctmse/runguard/shared/tracing v0.0.0
 	github.com/phuoctmse/runguard/shared/types v0.0.0
+	github.com/redis/go-redis/v9 v9.19.0
 )
 
 require (
@@ -43,6 +44,7 @@ require (
 	go.opentelemetry.io/otel/sdk v1.43.0 // indirect
 	go.opentelemetry.io/otel/trace v1.43.0 // indirect
 	go.opentelemetry.io/proto/otlp v1.10.0 // indirect
+	go.uber.org/atomic v1.11.0 // indirect
 	go.yaml.in/yaml/v2 v2.4.2 // indirect
 	golang.org/x/crypto v0.49.0 // indirect
 	golang.org/x/net v0.52.0 // indirect
