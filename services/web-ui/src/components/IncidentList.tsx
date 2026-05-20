@@ -1,4 +1,3 @@
-import { Link } from 'react-router-dom';
 import { useIncidents } from '../hooks/useIncidents';
 
 const phaseColor: Record<string, string> = {
@@ -12,46 +11,57 @@ const phaseColor: Record<string, string> = {
 };
 
 export default function IncidentList() {
-  const { incidents, loading, error } = useIncidents();
+  const { incidents, loading, error, refresh } = useIncidents();
 
-  if (loading) return <p>Loading...</p>;
-  if (error) return <p style={{ color: 'red' }}>Error: {error}</p>;
+  if (loading) return <div className="loading">Loading incidents...</div>;
+  if (error) return <div className="error">Error: {error}</div>;
 
   return (
     <div>
-      <h2>Incidents</h2>
-      <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-        <thead>
-          <tr style={{ textAlign: 'left', borderBottom: '2px solid #ddd' }}>
-            <th>Alert</th>
-            <th>Namespace</th>
-            <th>Workload</th>
-            <th>Severity</th>
-            <th>Phase</th>
-          </tr>
-        </thead>
-        <tbody>
-          {incidents.map((inc, i) => (
-            <tr key={i} style={{ borderBottom: '1px solid #eee' }}>
-              <td><Link to={`/incidents/${i}`}>{inc.alertName}</Link></td>
-              <td>{inc.namespace}</td>
-              <td>{inc.workload}</td>
-              <td>{inc.severity}</td>
-              <td>
-                <span style={{
-                  padding: '2px 8px',
-                  borderRadius: 4,
-                  backgroundColor: phaseColor[inc.phase] || '#6b7280',
-                  color: 'white',
-                  fontSize: 12,
-                }}>
-                  {inc.phase}
-                </span>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      <div className="page-header">
+        <h2>Incidents</h2>
+        <button onClick={refresh} className="btn btn-secondary">Refresh</button>
+      </div>
+
+      {incidents.length === 0 ? (
+        <div className="empty-state">No incidents found</div>
+      ) : (
+        <div className="table-wrap">
+          <table className="table">
+            <thead>
+              <tr>
+                <th>Alert</th>
+                <th>Namespace</th>
+                <th>Workload</th>
+                <th>Severity</th>
+                <th>Phase</th>
+              </tr>
+            </thead>
+            <tbody>
+              {incidents.map((inc, i) => (
+                <tr key={inc.id ?? i}>
+                  <td>{inc.alertName}</td>
+                  <td><code>{inc.namespace}</code></td>
+                  <td><code>{inc.workload}</code></td>
+                  <td>
+                    <span className={`severity severity-${inc.severity.toLowerCase()}`}>
+                      {inc.severity}
+                    </span>
+                  </td>
+                  <td>
+                    <span
+                      className="phase-badge"
+                      style={{ backgroundColor: phaseColor[inc.phase] || '#6b7280' }}
+                    >
+                      {inc.phase}
+                    </span>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
     </div>
   );
 }

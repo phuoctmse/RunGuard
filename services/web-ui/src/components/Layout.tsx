@@ -1,13 +1,40 @@
-import { Link, Outlet } from 'react-router-dom';
+import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
+import { clearToken } from '../api/client';
 
 export default function Layout() {
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  const navLink = (to: string, label: string) => (
+    <Link
+      to={to}
+      className={`nav-link ${location.pathname === to ? 'active' : ''}`}
+    >
+      {label}
+    </Link>
+  );
+
+  const handleLogout = () => {
+    clearToken();
+    navigate('/login');
+  };
+
   return (
-    <div style={{ fontFamily: 'system-ui', maxWidth: 960, margin: '0 auto', padding: 20 }}>
-      <nav style={{ display: 'flex', gap: 16, marginBottom: 24, borderBottom: '1px solid #ddd', paddingBottom: 12 }}>
-        <Link to="/" style={{ fontWeight: 700, fontSize: 20 }}>RunGuard</Link>
-        <Link to="/">Incidents</Link>
+    <div className="app">
+      <nav className="navbar">
+        <Link to="/" className="brand">RunGuard</Link>
+        <div className="nav-links">
+          {navLink('/', 'Incidents')}
+          {navLink('/runbooks', 'Runbooks')}
+        </div>
+        <div className="nav-spacer" />
+        <button onClick={handleLogout} className="btn btn-secondary btn-sm">
+          Logout
+        </button>
       </nav>
-      <Outlet />
+      <main className="main">
+        <Outlet />
+      </main>
     </div>
   );
 }
