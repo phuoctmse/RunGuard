@@ -24,9 +24,10 @@ Rules:
 
 
 class LLMClient:
-    def __init__(self, api_key: str, model: str = "claude-sonnet-4-20250514") -> None:
+    def __init__(self, api_key: str, model: str = "claude-sonnet-4-20250514", max_tokens: int = 2000) -> None:
         self.client = anthropic.AsyncAnthropic(api_key=api_key)
         self.model = model
+        self.max_tokens = max_tokens
 
     async def analyze_incident(
         self,
@@ -47,7 +48,7 @@ Analyze this incident and provide root cause, confidence, evidence citations, an
         try:
             response = await self.client.messages.create(
                 model=self.model,
-                max_tokens=2000,
+                max_tokens=self.max_tokens,
                 system=SYSTEM_PROMPT,
                 messages=[{"role": "user", "content": user_message}],
             )

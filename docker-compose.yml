@@ -37,5 +37,77 @@ services:
       timeout: 5s
       retries: 5
 
+  backend:
+    build:
+      context: .
+      dockerfile: services/backend/Dockerfile
+    ports:
+      - "8081:8081"
+    environment:
+      BACKEND_PORT: "8081"
+      DB_HOST: postgres
+      DB_PORT: "5432"
+      DB_USER: runguard
+      DB_PASSWORD: runguard
+      DB_NAME: runguard
+      REDIS_ADDR: redis:6379
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  api-gateway:
+    build:
+      context: .
+      dockerfile: services/api-gateway/Dockerfile
+    ports:
+      - "8080:8080"
+    depends_on:
+      - backend
+
+  worker:
+    build:
+      context: .
+      dockerfile: services/worker/Dockerfile
+    environment:
+      NATS_URL: nats://nats:4222
+      BACKEND_URL: http://backend:8081
+    depends_on:
+      nats:
+        condition: service_healthy
+      backend:
+        condition: service_started
+
+  reasoner:
+    build:
+      context: .
+      dockerfile: services/reasoner/Dockerfile
+    ports:
+      - "8082:8082"
+    depends_on:
+      - backend
+
+  operator:
+    build:
+      context: .
+      dockerfile: services/operator/Dockerfile
+    ports:
+      - "9090:9090"
+    environment:
+      NATS_URL: nats://nats:4222
+    depends_on:
+      nats:
+        condition: service_healthy
+
+  web-ui:
+    build:
+      context: .
+      dockerfile: services/web-ui/Dockerfile
+    ports:
+      - "3000:80"
+    depends_on:
+      - api-gateway
+
 volumes:
   postgres_data:
