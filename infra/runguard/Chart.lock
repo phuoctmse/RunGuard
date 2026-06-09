@@ -1,0 +1,21 @@
+dependencies:
+- name: api-gateway
+  repository: file://./charts/api-gateway
+  version: 0.1.0
+- name: backend
+  repository: file://./charts/backend
+  version: 0.1.0
+- name: operator
+  repository: file://./charts/operator
+  version: 0.1.0
+- name: reasoner
+  repository: file://./charts/reasoner
+  version: 0.1.0
+- name: worker
+  repository: file://./charts/worker
+  version: 0.1.0
+- name: web-ui
+  repository: file://./charts/web-ui
+  version: 0.1.0
+digest: sha256:2e3dc1ac67d10317f52455d77532dd79a545cebdf3950bca9547e91d62957491
+generated: "2026-06-09T12:44:47.759243264+07:00"

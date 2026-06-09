@@ -121,3 +121,6 @@ bin/
 # Coverage
 coverage.out
 coverage.html
+
+# Tools
+.understand-anything/

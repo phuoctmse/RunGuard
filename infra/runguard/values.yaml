@@ -1,0 +1,26 @@
+# Default values for runguard.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+global:
+  imageRegistry: ""
+  imageTag: ""
+  namespace: ""
+  environment: ["dev", "staging", "prod"]
+
+api-gateway:
+  replicaCount: 1 
+  resources:  
+    limits:
+      cpu: 500m
+      memory: 512Mi
+    requests:
+      cpu: 250m
+      memory: 256Mi
+  env:
+    - name: ENVIRONMENT
+      value: "dev"
+  secrets:
+    - name: api-gateway-secret
+      data:
+        API_KEY: "your-api-key"        
