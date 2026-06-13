@@ -1,0 +1,44 @@
+apiVersion: monitoring.coreos.com/v1alpha1
+kind: AlertmanagerConfig
+metadata:
+  name: runguard-alerts
+  namespace: runguard
+  labels:
+    alertmanagerConfig: runguard
+spec:
+  receivers:
+    - name: runguard-webhook
+      webhookConfigs:
+        - url: 'http://api-gateway.runguard.svc:8080/api/v1/webhooks/alertmanager'
+          sendResolved: true
+          httpConfig:
+            tlsConfig:
+              insecureSkipVerify: true
+
+    - name: slack-critical
+      slackConfigs:
+        - apiURL:
+            name: alertmanager-slack-secret
+            key: webhook-url
+          channel: '#runguard-alerts'
+          title: '{{ template "slack.runguard.title" . }}'
+          text: '{{ template "slack.runguard.text" . }}'
+          sendResolved: true
+
+  route:
+    receiver: runguard-webhook
+    groupBy: [alertname, namespace]
+    groupWait: 30s
+    groupInterval: 5m
+    repeatInterval: 12h
+    routes:
+      - receiver: slack-critical
+        matchers:
+          - name: severity
+            matchType: "="
+            value: critical
+      - receiver: runguard-webhook
+        matchers:
+          - name: severity
+            matchType: "=~"
+            value: "warning|critical"

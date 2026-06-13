@@ -1,0 +1,46 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: runguard-services
+  namespace: monitoring
+  labels:
+    release: monitoring   # must match kube-prometheus-stack release name
+spec:
+  namespaceSelector:
+    matchNames:
+      - runguard
+      - runguard-dev
+      - runguard-staging
+      - runguard-prod
+  selector:
+    matchLabels:
+      app.kubernetes.io/part-of: runguard
+  endpoints:
+    - port: http
+      path: /metrics
+      interval: 15s
+      scrapeTimeout: 10s
+---
+# Worker exposes metrics on a separate port (:9091) — no HTTP server
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: runguard-worker-metrics
+  namespace: monitoring
+  labels:
+    release: monitoring
+spec:
+  namespaceSelector:
+    matchNames:
+      - runguard
+      - runguard-dev
+      - runguard-staging
+      - runguard-prod
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: worker
+      app.kubernetes.io/part-of: runguard
+  endpoints:
+    - port: metrics
+      path: /metrics
+      interval: 15s
