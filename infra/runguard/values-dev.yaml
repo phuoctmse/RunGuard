@@ -29,10 +29,31 @@ api-gateway:
 backend:
   fullnameOverride: backend
   replicaCount: 1
+  autoscaling:
+    enabled: false
   image:
     repository: runguard-backend
     tag: latest
     pullPolicy: Never
+  env:
+    - name: BACKEND_PORT
+      value: "8081"
+    - name: DB_HOST
+      value: "postgres"
+    - name: DB_PORT
+      value: "5432"
+    - name: DB_USER
+      value: "runguard"
+    - name: DB_NAME
+      value: "runguard"
+    - name: DB_PASSWORD
+      value: "runguard"
+    - name: REDIS_ADDR
+      value: "redis:6379"
+    - name: NATS_URL
+      value: "nats://nats:4222"
+    - name: OTEL_SDK_DISABLED
+      value: "true"
 
 operator:
   fullnameOverride: operator
@@ -41,6 +62,15 @@ operator:
     repository: runguard-operator
     tag: latest
     pullPolicy: Never
+  env:
+    - name: OPERATOR_WEBHOOK_PORT
+      value: "9090"
+    - name: BACKEND_URL
+      value: "http://backend:8081"
+    - name: NATS_URL
+      value: "nats://nats:4222"
+    - name: OTEL_SDK_DISABLED
+      value: "true"
 
 reasoner:
   fullnameOverride: reasoner
@@ -49,6 +79,9 @@ reasoner:
     repository: runguard-reasoner
     tag: latest
     pullPolicy: Never
+  env:
+    - name: OTEL_SDK_DISABLED
+      value: "true"
 
 worker:
   fullnameOverride: worker
