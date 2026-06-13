@@ -1,9 +1,13 @@
 global:
   environment: dev
-  imageTag: v0.1.0
+  imageTag: latest
 
 api-gateway:
   replicaCount: 1
+  image:
+    repository: runguard-api-gateway
+    tag: latest
+    pullPolicy: Never
   resources:
     requests:
       cpu: 50m
@@ -14,15 +18,35 @@ api-gateway:
 
 backend:
   replicaCount: 1
+  image:
+    repository: runguard-backend
+    tag: latest
+    pullPolicy: Never
 
 operator:
   replicaCount: 1
+  image:
+    repository: runguard-operator
+    tag: latest
+    pullPolicy: Never
 
 reasoner:
   replicaCount: 1
+  image:
+    repository: runguard-reasoner
+    tag: latest
+    pullPolicy: Never
 
 worker:
   replicaCount: 1
+  image:
+    repository: runguard-worker
+    tag: latest
+    pullPolicy: Never
 
 web-ui:
   replicaCount: 1
+  image:
+    repository: runguard-web-ui
+    tag: latest
+    pullPolicy: Never

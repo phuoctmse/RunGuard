@@ -36,7 +36,7 @@ prometheus:
 # ── Grafana ───────────────────────────────────────────────────────────────────
 grafana:
   enabled: true
-  adminPassword: ""   # set via --set grafana.adminPassword=<value> or K8s secret
+  adminPassword: "admin"   # set via --set grafana.adminPassword=<value> or K8s secret
   ingress:
     enabled: false    # expose via port-forward in dev; Gateway API in prod
   persistence:
@@ -48,17 +48,6 @@ grafana:
       label: grafana_dashboard
       labelValue: "1"
       searchNamespace: ALL
-  datasources:
-    datasources.yaml:
-      apiVersion: 1
-      datasources:
-        - name: Prometheus
-          type: prometheus
-          url: http://monitoring-prometheus:9090
-          isDefault: true
-        - name: Loki
-          type: loki
-          url: http://loki:3100
   resources:
     requests:
       cpu: 100m
