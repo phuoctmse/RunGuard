@@ -80,6 +80,8 @@ reasoner:
     tag: latest
     pullPolicy: Never
   env:
+    - name: REASONER_PORT
+      value: "8082"
     - name: OTEL_SDK_DISABLED
       value: "true"
 
@@ -105,3 +107,13 @@ web-ui:
     repository: runguard-web-ui
     tag: latest
     pullPolicy: Never
+  volumes:
+    - name: nginx-cache
+      emptyDir: {}
+    - name: nginx-run
+      emptyDir: {}
+  volumeMounts:
+    - name: nginx-cache
+      mountPath: /var/cache/nginx
+    - name: nginx-run
+      mountPath: /var/run
