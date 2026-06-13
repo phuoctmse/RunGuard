@@ -1,44 +1,76 @@
+---
+# dev + staging: automated sync
 apiVersion: argoproj.io/v1alpha1
 kind: ApplicationSet
 metadata:
-  name: runguard
+  name: runguard-auto
   namespace: argocd
 spec:
-  goTemplate: true
   generators:
     - list:
         elements:
           - env: dev
             branch: v2
-            automated: true
           - env: staging
             branch: main
-            automated: true
-          - env: prod
-            branch: main
-            automated: false
   template:
     metadata:
-      name: "runguard-{{.env}}"
+      name: "runguard-{{env}}"
     spec:
       project: default
       source:
         repoURL: https://github.com/phuoctmse/runguard.git
-        targetRevision: "{{.branch}}"
+        targetRevision: "{{branch}}"
         path: infra/runguard
         helm:
           valueFiles:
             - values.yaml
-            - "values-{{.env}}.yaml"
+            - "values-{{env}}.yaml"
       destination:
         server: https://kubernetes.default.svc
-        namespace: "runguard-{{.env}}"
+        namespace: "runguard-{{env}}"
       syncPolicy:
-        {{- if .automated }}
         automated:
           prune: true
           selfHeal: true
-        {{- end }}
+        syncOptions:
+          - CreateNamespace=true
+        retry:
+          limit: 3
+          backoff:
+            duration: 5s
+            factor: 2
+            maxDuration: 3m
+---
+# prod: manual sync only
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: runguard-prod
+  namespace: argocd
+spec:
+  generators:
+    - list:
+        elements:
+          - env: prod
+            branch: main
+  template:
+    metadata:
+      name: "runguard-{{env}}"
+    spec:
+      project: default
+      source:
+        repoURL: https://github.com/phuoctmse/runguard.git
+        targetRevision: "{{branch}}"
+        path: infra/runguard
+        helm:
+          valueFiles:
+            - values.yaml
+            - "values-{{env}}.yaml"
+      destination:
+        server: https://kubernetes.default.svc
+        namespace: "runguard-{{env}}"
+      syncPolicy:
         syncOptions:
           - CreateNamespace=true
         retry:

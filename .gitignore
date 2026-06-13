@@ -17,6 +17,11 @@ service-account*.json
 .kube/config.*
 .ssh/
 
+# Downloaded binaries
+argocd/argocd-linux-amd64
+argocd/argocd-darwin-amd64
+argocd/argocd-windows-amd64.exe
+
 # API keys and tokens
 *.token
 api_keys.json
