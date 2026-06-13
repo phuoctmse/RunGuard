@@ -1,5 +1,6 @@
 global:
   environment: dev
+  imageTag: v0.1.0
 
 api-gateway:
   replicaCount: 1
