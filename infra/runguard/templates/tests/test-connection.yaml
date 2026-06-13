@@ -11,5 +11,5 @@ spec:
     - name: wget
       image: busybox
       command: ['wget']
-      args: ['{{ include "runguard.fullname" . }}:{{ .Values.service.port }}']
+      args: ['{{ .Release.Name }}-api-gateway:8080/healthz']
   restartPolicy: Never
