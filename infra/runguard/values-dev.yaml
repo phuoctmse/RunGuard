@@ -1,0 +1,27 @@
+global:
+  environment: dev
+
+api-gateway:
+  replicaCount: 1
+  resources:
+    requests:
+      cpu: 50m
+      memory: 64Mi
+    limits:
+      cpu: 200m
+      memory: 128Mi
+
+backend:
+  replicaCount: 1
+
+operator:
+  replicaCount: 1
+
+reasoner:
+  replicaCount: 1
+
+worker:
+  replicaCount: 1
+
+web-ui:
+  replicaCount: 1

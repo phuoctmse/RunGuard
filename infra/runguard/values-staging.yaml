@@ -1,0 +1,20 @@
+global:
+  environment: staging
+
+api-gateway:
+  replicaCount: 2
+
+backend:
+  replicaCount: 2
+
+operator:
+  replicaCount: 1
+
+reasoner:
+  replicaCount: 2
+
+worker:
+  replicaCount: 2
+
+web-ui:
+  replicaCount: 2

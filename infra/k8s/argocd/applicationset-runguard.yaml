@@ -1,0 +1,49 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: runguard
+  namespace: argocd
+spec:
+  goTemplate: true
+  generators:
+    - list:
+        elements:
+          - env: dev
+            branch: v2
+            automated: true
+          - env: staging
+            branch: main
+            automated: true
+          - env: prod
+            branch: main
+            automated: false
+  template:
+    metadata:
+      name: "runguard-{{.env}}"
+    spec:
+      project: default
+      source:
+        repoURL: https://github.com/phuoctmse/runguard.git
+        targetRevision: "{{.branch}}"
+        path: infra/runguard
+        helm:
+          valueFiles:
+            - values.yaml
+            - "values-{{.env}}.yaml"
+      destination:
+        server: https://kubernetes.default.svc
+        namespace: "runguard-{{.env}}"
+      syncPolicy:
+        {{- if .automated }}
+        automated:
+          prune: true
+          selfHeal: true
+        {{- end }}
+        syncOptions:
+          - CreateNamespace=true
+        retry:
+          limit: 3
+          backoff:
+            duration: 5s
+            factor: 2
+            maxDuration: 3m
