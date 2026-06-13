@@ -3,11 +3,21 @@ global:
   imageTag: latest
 
 api-gateway:
+  fullnameOverride: api-gateway
   replicaCount: 1
+  autoscaling:
+    enabled: false
   image:
     repository: runguard-api-gateway
     tag: latest
     pullPolicy: Never
+  env:
+    - name: API_GATEWAY_PORT
+      value: "8080"
+    - name: BACKEND_URL
+      value: "http://backend:8081"
+    - name: OTEL_SDK_DISABLED
+      value: "true"
   resources:
     requests:
       cpu: 50m
@@ -17,6 +27,7 @@ api-gateway:
       memory: 128Mi
 
 backend:
+  fullnameOverride: backend
   replicaCount: 1
   image:
     repository: runguard-backend
@@ -24,6 +35,7 @@ backend:
     pullPolicy: Never
 
 operator:
+  fullnameOverride: operator
   replicaCount: 1
   image:
     repository: runguard-operator
@@ -31,6 +43,7 @@ operator:
     pullPolicy: Never
 
 reasoner:
+  fullnameOverride: reasoner
   replicaCount: 1
   image:
     repository: runguard-reasoner
@@ -38,13 +51,22 @@ reasoner:
     pullPolicy: Never
 
 worker:
+  fullnameOverride: worker
   replicaCount: 1
   image:
     repository: runguard-worker
     tag: latest
     pullPolicy: Never
+  env:
+    - name: NATS_URL
+      value: "nats://nats:4222"
+    - name: BACKEND_URL
+      value: "http://backend:8081"
+    - name: OTEL_SDK_DISABLED
+      value: "true"
 
 web-ui:
+  fullnameOverride: web-ui
   replicaCount: 1
   image:
     repository: runguard-web-ui
