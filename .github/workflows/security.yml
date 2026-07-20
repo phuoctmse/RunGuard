@@ -37,7 +37,7 @@ jobs:
         if: matrix.language == 'go'
         run: echo "GOROOT=$(go env GOROOT)" >> $GITHUB_ENV
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v7
         if: matrix.language == 'python'
         with:
           python-version: ${{ env.PYTHON_VERSION }}
@@ -108,7 +108,7 @@ jobs:
         working-directory: services/reasoner
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v7
         with:
           python-version: ${{ env.PYTHON_VERSION }}
           cache: pip
